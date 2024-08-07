@@ -1,0 +1,16 @@
+name: prophet-th
+
+services:
+  db:
+    image: postgres
+    ports:
+      - 5432:5432
+    environment: 
+      POSTGRES_PASSWORD: prophet-th
+      POSTGRES_USER: prophet-th
+      POSTGRES_DB: prophet-th
+    volumes:
+      - db:/var/lib/postgresql/data
+
+volumes:
+  db:
