@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/netip"
-	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jhamill34/prophet-security-takehome/server/database/pkg/database"
@@ -48,7 +47,8 @@ func (a *AllowListResource) ListAllLists() http.HandlerFunc {
 		})
 
 		if err != nil {
-			panic(err)
+			InternalServerError(req, resp, err)
+			return
 		}
 
 		result := make([]AllowlistEntry, len(dbResult))
@@ -59,20 +59,22 @@ func (a *AllowListResource) ListAllLists() http.HandlerFunc {
 			}
 		}
 
-		err = Json(resp, result, 200)
-		if err != nil {
-			panic(err)
-		}
+		Json(req, resp, result, 200)
 	}
 }
 
 func (a *AllowListResource) ListAllowList() http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
-		id := AssertInt(chi.URLParam(req, "id"))
+		id, err := AssertInt(chi.URLParam(req, "id"))
+		if err != nil {
+			Err(req, resp, "Expected ID to be an integer", 400, err)
+			return
+		}
 
 		dbResult, err := a.queries.ListEntriesForAllowList(req.Context(), id)
 		if err != nil {
-			panic(err)
+			InternalServerError(req, resp, err)
+			return
 		}
 
 		entries := make([]AllowlistEntryItem, len(dbResult))
@@ -85,10 +87,7 @@ func (a *AllowListResource) ListAllowList() http.HandlerFunc {
 			}
 		}
 
-		err = Json(resp, entries, 200)
-		if err != nil {
-			panic(err)
-		}
+		Json(req, resp, entries, 200)
 	}
 }
 
@@ -99,10 +98,16 @@ type CreateAllowListInput struct {
 func (a *AllowListResource) CreateAllowList() http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
 		var input CreateAllowListInput
-		json.NewDecoder(req.Body).Decode(&input)
+		err := json.NewDecoder(req.Body).Decode(&input)
+		if err != nil {
+			Err(req, resp, "Unable to parse JSON input", 400, err)
+			return
+		}
+
 		dbResult, err := a.queries.CreateAllowList(req.Context(), input.Name)
 		if err != nil {
-			panic(err)
+			InternalServerError(req, resp, err)
+			return
 		}
 
 		entry := AllowlistEntry{
@@ -110,26 +115,21 @@ func (a *AllowListResource) CreateAllowList() http.HandlerFunc {
 			Name: dbResult.Name,
 		}
 
-		err = Json(resp, entry, 201)
-		if err != nil {
-			panic(err)
-		}
+		Json(req, resp, entry, 201)
 	}
 }
 
 func (a *AllowListResource) DeleteAllowList() http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
-		idStr := chi.URLParam(req, "id")
-		id, err := strconv.ParseInt(idStr, 10, 32)
+		id, err := AssertInt(chi.URLParam(req, "id"))
 		if err != nil {
-			panic(err)
+			Err(req, resp, "ID should be an integer", 400, err)
+			return
 		}
-
-		// TODO: Delete all associated entries
 
 		err = a.queries.DeleteAllowList(req.Context(), int32(id))
 		if err != nil {
-			panic(err)
+			InternalServerError(req, resp, err)
 		}
 
 		resp.WriteHeader(204)
@@ -142,14 +142,23 @@ type ListEntryInput struct {
 
 func (a *AllowListResource) AddToList() http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
-		listId := AssertInt(chi.URLParam(req, "id"))
+		listId, err := AssertInt(chi.URLParam(req, "id"))
+		if err != nil {
+			Err(req, resp, "ID should be an integer", 400, err)
+			return
+		}
 
 		var input ListEntryInput
-		json.NewDecoder(req.Body).Decode(&input)
+		err = json.NewDecoder(req.Body).Decode(&input)
+		if err != nil {
+			Err(req, resp, "Unable to parse JSON input", 400, err)
+			return
+		}
 
 		ipAddr, err := netip.ParsePrefix(input.Cidr)
 		if err != nil {
-			panic(err)
+			Err(req, resp, "Expected Cidr be of the form <ip>/<bits>", 400, err)
+			return
 		}
 
 		dbResult, err := a.queries.AddToAllowlist(req.Context(), database.AddToAllowlistParams{
@@ -157,7 +166,8 @@ func (a *AllowListResource) AddToList() http.HandlerFunc {
 			ListID: listId,
 		})
 		if err != nil {
-			panic(err)
+			InternalServerError(req, resp, err)
+			return
 		}
 
 		entry := AllowlistEntryItem{
@@ -166,27 +176,32 @@ func (a *AllowListResource) AddToList() http.HandlerFunc {
 			ListID: dbResult.ListID,
 		}
 
-		err = Json(resp, entry, 201)
-		if err != nil {
-			panic(err)
-		}
+		Json(req, resp, entry, 201)
 	}
 }
 
 func (a *AllowListResource) RemoveFromList() http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
-		listId := AssertInt(chi.URLParam(req, "id"))
-		entryId := AssertInt(chi.URLParam(req, "entryId"))
+		listId, err := AssertInt(chi.URLParam(req, "id"))
+		if err != nil {
+			Err(req, resp, "Expected ID to be an integer", 400, err)
+			return
+		}
 
-		err := a.queries.RemoveFromAllowlist(req.Context(), database.RemoveFromAllowlistParams{
+		entryId, err := AssertInt(chi.URLParam(req, "entryId"))
+		if err != nil {
+			Err(req, resp, "Expected entryID to be an integer", 400, err)
+			return
+		}
+
+		err = a.queries.RemoveFromAllowlist(req.Context(), database.RemoveFromAllowlistParams{
 			ListID: listId,
 			ID:     entryId,
 		})
 		if err != nil {
-			panic(err)
+			InternalServerError(req, resp, err)
 		}
 
 		resp.WriteHeader(204)
 	}
-
 }

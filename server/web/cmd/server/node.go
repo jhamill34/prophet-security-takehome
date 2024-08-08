@@ -42,7 +42,8 @@ func (n *NodeResource) ListFilteredNodes() http.HandlerFunc {
 				Limit:  limit,
 			})
 			if err != nil {
-				panic(err)
+				InternalServerError(req, resp, err)
+				return
 			}
 
 			for _, r := range dbResult {
@@ -61,7 +62,12 @@ func (n *NodeResource) ListFilteredNodes() http.HandlerFunc {
 				}
 			}
 		} else {
-			allowListId := AssertInt(allowListIdStr)
+			allowListId, err := AssertInt(allowListIdStr)
+			if err != nil {
+				Err(req, resp, "Expected allowListId to be an integer", 400, err)
+				return
+			}
+
 			if invert != "true" {
 				dbResult, err := n.queries.ListNodesWithoutAllowlist(req.Context(), database.ListNodesWithoutAllowlistParams{
 					IpAddr: cursor,
@@ -69,7 +75,8 @@ func (n *NodeResource) ListFilteredNodes() http.HandlerFunc {
 					ListID: allowListId,
 				})
 				if err != nil {
-					panic(err)
+					InternalServerError(req, resp, err)
+					return
 				}
 
 				for _, r := range dbResult {
@@ -94,7 +101,8 @@ func (n *NodeResource) ListFilteredNodes() http.HandlerFunc {
 					ListID: allowListId,
 				})
 				if err != nil {
-					panic(err)
+					InternalServerError(req, resp, err)
+					return
 				}
 
 				for _, r := range dbResult {
@@ -124,9 +132,6 @@ func (n *NodeResource) ListFilteredNodes() http.HandlerFunc {
 			return strings.Compare(a.IpAddr, b.IpAddr)
 		})
 
-		err := Json(resp, result, 200)
-		if err != nil {
-			panic(err)
-		}
+		Json(req, resp, result, 200)
 	}
 }

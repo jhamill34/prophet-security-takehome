@@ -46,14 +46,16 @@ func (s *SourceResource) ListSources() http.HandlerFunc {
 			Limit: limit,
 		})
 		if err != nil {
-			panic(err)
+			InternalServerError(req, resp, err)
+			return
 		}
 
 		result := make([]SourceEntry, len(dbResult))
 		for i, r := range dbResult {
 			period, err := r.Period.Value()
 			if err != nil {
-				panic(err)
+				InternalServerError(req, resp, err)
+				return
 			}
 
 			result[i] = SourceEntry{
@@ -67,16 +69,18 @@ func (s *SourceResource) ListSources() http.HandlerFunc {
 			}
 		}
 
-		err = Json(resp, result, 200)
-		if err != nil {
-			panic(err)
-		}
+		Json(req, resp, result, 200)
 	}
 }
 
 func (s *SourceResource) ListSourcesNodes() http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
-		sourceId := AssertInt(chi.URLParam(req, "id"))
+		sourceId, err := AssertInt(chi.URLParam(req, "id"))
+		if err != nil {
+			Err(req, resp, "Expected ID to be an integer", 400, err)
+			return
+		}
+
 		after := ParseIp(req.URL.Query().Get("after"))
 		limit := ParseIntDefault(req.URL.Query().Get("limit"), 10)
 
@@ -86,7 +90,8 @@ func (s *SourceResource) ListSourcesNodes() http.HandlerFunc {
 			ID:     sourceId,
 		})
 		if err != nil {
-			panic(err)
+			InternalServerError(req, resp, err)
+			return
 		}
 
 		resultMap := make(map[string]*NodeEntry)
@@ -115,10 +120,7 @@ func (s *SourceResource) ListSourcesNodes() http.HandlerFunc {
 			return strings.Compare(a.IpAddr, b.IpAddr)
 		})
 
-		err = Json(resp, result, 200)
-		if err != nil {
-			panic(err)
-		}
+		Json(req, resp, result, 200)
 	}
 }
 
@@ -133,11 +135,16 @@ func (s *SourceResource) CreateSource() http.HandlerFunc {
 		var input CreateSourceInput
 		err := json.NewDecoder(req.Body).Decode(&input)
 		if err != nil {
-			panic(err)
+			Err(req, resp, "Unable to parse JSON input", 400, err)
+			return
 		}
 
 		var period pgtype.Interval
-		period.Scan(input.Period)
+		err = period.Scan(input.Period)
+		if err != nil {
+			Err(req, resp, "Invalid format for period should be in the form '[y years] [m mons] [d days] HH:MM:SS' where [] are optional", 400, err)
+			return
+		}
 
 		dbResult, err := s.queries.CreateSource(req.Context(), database.CreateSourceParams{
 			Name:   input.Name,
@@ -163,20 +170,22 @@ func (s *SourceResource) CreateSource() http.HandlerFunc {
 			Running:       dbResult.Running.Bool,
 		}
 
-		err = Json(resp, result, 201)
-		if err != nil {
-			panic(err)
-		}
+		Json(req, resp, result, 201)
 	}
 }
 
 func (s *SourceResource) StartSource() http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
-		id := AssertInt(chi.URLParam(req, "id"))
-
-		_, err := s.queries.StartSource(req.Context(), id)
+		id, err := AssertInt(chi.URLParam(req, "id"))
 		if err != nil {
-			panic(err)
+			Err(req, resp, "Expected ID to be an integer", 400, err)
+			return
+		}
+
+		_, err = s.queries.StartSource(req.Context(), id)
+		if err != nil {
+			InternalServerError(req, resp, err)
+			return
 		}
 
 		resp.WriteHeader(204)
@@ -185,11 +194,16 @@ func (s *SourceResource) StartSource() http.HandlerFunc {
 
 func (s *SourceResource) StopSource() http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
-		id := AssertInt(chi.URLParam(req, "id"))
-
-		_, err := s.queries.StopSource(req.Context(), id)
+		id, err := AssertInt(chi.URLParam(req, "id"))
 		if err != nil {
-			panic(err)
+			Err(req, resp, "Expected ID to be an integer", 400, err)
+			return
+		}
+
+		_, err = s.queries.StopSource(req.Context(), id)
+		if err != nil {
+			InternalServerError(req, resp, err)
+			return
 		}
 
 		resp.WriteHeader(204)

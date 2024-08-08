@@ -37,3 +37,8 @@ type AllowlistEntryItem struct {
 	Cidr   string `json:"cidr_block"`
 	ListID int32  `json:"allowlist_id"`
 }
+
+type ErrorMessage struct {
+	Message   string `json:"msg"`
+	RequestId string `json:"request_id"`
+}
