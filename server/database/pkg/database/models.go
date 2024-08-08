@@ -5,6 +5,8 @@
 package database
 
 import (
+	"net/netip"
+
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -15,13 +17,13 @@ type Allowlist struct {
 
 type AllowlistEntry struct {
 	ID     int32
-	IpAddr string
+	IpAddr netip.Prefix
 	ListID int32
 }
 
 type Node struct {
 	ID       int32
-	IpAddr   string
+	IpAddr   netip.Addr
 	SourceID int32
 	Version  pgtype.Int8
 }

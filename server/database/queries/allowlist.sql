@@ -1,14 +1,16 @@
 -- name: ListAllLists :many 
 SELECT *
 FROM allowlist
-WHERE id > $1
+WHERE 1=1
+AND id > $1
 ORDER BY id
 LIMIT $2;
 
 -- name: ListEntriesForAllowList :many 
-SELECT DISTINCT ip_addr
+SELECT *
 FROM allowlist_entry 
-WHERE list_id = $1
+WHERE 1=1
+AND list_id = $1
 ORDER BY ip_addr;
 
 -- name: CreateAllowList :one
@@ -29,5 +31,6 @@ RETURNING *;
 
 -- name: RemoveFromAllowlist :exec
 DELETE FROM allowlist_entry 
-WHERE ip_addr = $1
+WHERE 1=1
+AND id = $1 
 AND list_id = $2;

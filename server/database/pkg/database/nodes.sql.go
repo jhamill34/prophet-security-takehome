@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"net/netip"
 )
 
 const listAllNodes = `-- name: ListAllNodes :many
@@ -21,19 +22,19 @@ LIMIT $2
 `
 
 type ListAllNodesParams struct {
-	IpAddr string
+	IpAddr netip.Addr
 	Limit  int32
 }
 
-func (q *Queries) ListAllNodes(ctx context.Context, arg ListAllNodesParams) ([]string, error) {
+func (q *Queries) ListAllNodes(ctx context.Context, arg ListAllNodesParams) ([]netip.Addr, error) {
 	rows, err := q.db.Query(ctx, listAllNodes, arg.IpAddr, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []string
+	var items []netip.Addr
 	for rows.Next() {
-		var ip_addr string
+		var ip_addr netip.Addr
 		if err := rows.Scan(&ip_addr); err != nil {
 			return nil, err
 		}
@@ -52,7 +53,7 @@ INNER JOIN sources s ON s.id = n.source_id
 WHERE 1=1
 AND s.version < n.version 
 AND n.ip_addr > $1
-AND n.ip_addr NOT IN (
+AND NOT n.ip_addr <<= ANY (
     SELECT a.ip_addr
     FROM allowlist_entry a 
     WHERE 1=1 
@@ -63,20 +64,20 @@ LIMIT $2
 `
 
 type ListFilteredAllowlistNodesParams struct {
-	IpAddr string
+	IpAddr netip.Addr
 	Limit  int32
 	ListID int32
 }
 
-func (q *Queries) ListFilteredAllowlistNodes(ctx context.Context, arg ListFilteredAllowlistNodesParams) ([]string, error) {
+func (q *Queries) ListFilteredAllowlistNodes(ctx context.Context, arg ListFilteredAllowlistNodesParams) ([]netip.Addr, error) {
 	rows, err := q.db.Query(ctx, listFilteredAllowlistNodes, arg.IpAddr, arg.Limit, arg.ListID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []string
+	var items []netip.Addr
 	for rows.Next() {
-		var ip_addr string
+		var ip_addr netip.Addr
 		if err := rows.Scan(&ip_addr); err != nil {
 			return nil, err
 		}
@@ -101,20 +102,20 @@ LIMIT $2
 `
 
 type ListSourcesNodesParams struct {
-	IpAddr string
+	IpAddr netip.Addr
 	Limit  int32
 	ID     int32
 }
 
-func (q *Queries) ListSourcesNodes(ctx context.Context, arg ListSourcesNodesParams) ([]string, error) {
+func (q *Queries) ListSourcesNodes(ctx context.Context, arg ListSourcesNodesParams) ([]netip.Addr, error) {
 	rows, err := q.db.Query(ctx, listSourcesNodes, arg.IpAddr, arg.Limit, arg.ID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []string
+	var items []netip.Addr
 	for rows.Next() {
-		var ip_addr string
+		var ip_addr netip.Addr
 		if err := rows.Scan(&ip_addr); err != nil {
 			return nil, err
 		}

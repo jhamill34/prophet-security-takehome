@@ -8,6 +8,7 @@ package database
 import (
 	"context"
 	"errors"
+	"net/netip"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -32,7 +33,7 @@ type BatchInsertNodesBatchResults struct {
 }
 
 type BatchInsertNodesParams struct {
-	IpAddr   string
+	IpAddr   netip.Addr
 	SourceID int32
 	Version  pgtype.Int8
 }

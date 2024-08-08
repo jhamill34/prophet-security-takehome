@@ -19,7 +19,7 @@ FROM sources
 WHERE 1=1
 AND (last_execution IS NULL OR last_execution + period < now())
 AND running = TRUE;  
-    
+
 -- name: GetSource :one
 SELECT * 
 FROM sources

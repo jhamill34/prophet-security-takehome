@@ -26,7 +26,7 @@ INNER JOIN sources s ON s.id = n.source_id
 WHERE 1=1
 AND s.version < n.version 
 AND n.ip_addr > $1
-AND n.ip_addr NOT IN (
+AND NOT n.ip_addr <<= ANY (
     SELECT a.ip_addr
     FROM allowlist_entry a 
     WHERE 1=1 

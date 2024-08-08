@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"net/netip"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -89,9 +90,13 @@ func (i *Ingester) doIngestion(ctx context.Context, source database.Source) {
 	for i, row := range rows {
 		var newVersion pgtype.Int8
 		newVersion.Scan(source.Version.Int64 + 1)
+		addr, err := netip.ParseAddr(row[0])
+		if err != nil {
+			panic(err)
+		}
 
 		insertNodes[i] = database.BatchInsertNodesParams{
-			IpAddr:   row[0],
+			IpAddr:   addr,
 			SourceID: source.ID,
 			Version:  newVersion,
 		}

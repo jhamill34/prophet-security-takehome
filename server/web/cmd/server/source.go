@@ -59,7 +59,7 @@ func (s *SourceResource) ListSources() http.HandlerFunc {
 func (s *SourceResource) ListSourcesNodes() http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
 		sourceId := AssertInt(chi.URLParam(req, "id"))
-		after := req.URL.Query().Get("after")
+		after := ParseIp(req.URL.Query().Get("after"))
 		limit := ParseIntDefault(req.URL.Query().Get("limit"), 10)
 
 		result, err := s.queries.ListSourcesNodes(req.Context(), database.ListSourcesNodesParams{

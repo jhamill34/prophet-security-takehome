@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS nodes (
     id  SERIAL PRIMARY KEY,
-    ip_addr VARCHAR(255) NOT NULL,
+    ip_addr INET NOT NULL,
     source_id INT NOT NULL,
     version BIGINT DEFAULT 0
 );

@@ -1,6 +1,9 @@
 package main
 
-import "strconv"
+import (
+	"net/netip"
+	"strconv"
+)
 
 func AssertInt(val string) int32 {
 	num, err := strconv.ParseInt(val, 10, 32)
@@ -22,4 +25,17 @@ func ParseIntDefault(val string, def int32) int32 {
 	}
 
 	return int32(num)
+}
+
+func ParseIp(val string) netip.Addr {
+	if val == "" {
+		return netip.IPv4Unspecified()
+	}
+
+	addr, err := netip.ParseAddr(val)
+	if err != nil {
+		panic(err)
+	}
+
+	return addr
 }

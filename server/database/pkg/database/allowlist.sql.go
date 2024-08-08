@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"net/netip"
 )
 
 const addToAllowlist = `-- name: AddToAllowlist :one
@@ -18,7 +19,7 @@ RETURNING id, ip_addr, list_id
 `
 
 type AddToAllowlistParams struct {
-	IpAddr string
+	IpAddr netip.Prefix
 	ListID int32
 }
 
@@ -55,7 +56,8 @@ func (q *Queries) DeleteAllowList(ctx context.Context, id int32) error {
 const listAllLists = `-- name: ListAllLists :many
 SELECT id, name
 FROM allowlist
-WHERE id > $1
+WHERE 1=1
+AND id > $1
 ORDER BY id
 LIMIT $2
 `
@@ -86,25 +88,26 @@ func (q *Queries) ListAllLists(ctx context.Context, arg ListAllListsParams) ([]A
 }
 
 const listEntriesForAllowList = `-- name: ListEntriesForAllowList :many
-SELECT DISTINCT ip_addr
+SELECT id, ip_addr, list_id
 FROM allowlist_entry 
-WHERE list_id = $1
+WHERE 1=1
+AND list_id = $1
 ORDER BY ip_addr
 `
 
-func (q *Queries) ListEntriesForAllowList(ctx context.Context, listID int32) ([]string, error) {
+func (q *Queries) ListEntriesForAllowList(ctx context.Context, listID int32) ([]AllowlistEntry, error) {
 	rows, err := q.db.Query(ctx, listEntriesForAllowList, listID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []string
+	var items []AllowlistEntry
 	for rows.Next() {
-		var ip_addr string
-		if err := rows.Scan(&ip_addr); err != nil {
+		var i AllowlistEntry
+		if err := rows.Scan(&i.ID, &i.IpAddr, &i.ListID); err != nil {
 			return nil, err
 		}
-		items = append(items, ip_addr)
+		items = append(items, i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -114,16 +117,17 @@ func (q *Queries) ListEntriesForAllowList(ctx context.Context, listID int32) ([]
 
 const removeFromAllowlist = `-- name: RemoveFromAllowlist :exec
 DELETE FROM allowlist_entry 
-WHERE ip_addr = $1
+WHERE 1=1
+AND id = $1 
 AND list_id = $2
 `
 
 type RemoveFromAllowlistParams struct {
-	IpAddr string
+	ID     int32
 	ListID int32
 }
 
 func (q *Queries) RemoveFromAllowlist(ctx context.Context, arg RemoveFromAllowlistParams) error {
-	_, err := q.db.Exec(ctx, removeFromAllowlist, arg.IpAddr, arg.ListID)
+	_, err := q.db.Exec(ctx, removeFromAllowlist, arg.ID, arg.ListID)
 	return err
 }

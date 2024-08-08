@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS allowlist (
 
 CREATE TABLE IF NOT EXISTS allowlist_entry (
     id SERIAL PRIMARY KEY,
-    ip_addr VARCHAR(255) NOT NULL,
+    ip_addr CIDR NOT NULL,
     list_id INT NOT NULL
 );
 
