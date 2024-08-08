@@ -35,7 +35,7 @@ Content-Type: application/json
 
 
 # Delete an allowlist
-DELETE http://localhost:3333/allowlist/2
+DELETE http://localhost:3333/allowlist/1
 
 # List IPs in an allowlist
 GET http://localhost:3333/allowlist/2/entry
