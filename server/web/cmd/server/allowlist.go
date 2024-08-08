@@ -26,11 +26,36 @@ func (a *AllowListResource) Path() string {
 func (a *AllowListResource) Handler() http.Handler {
 	r := chi.NewRouter()
 	r.Post("/", a.CreateAllowList())
+	r.Get("/", a.ListAllLists())
 	r.Get("/{id}", a.ListAllowList())
 	r.Delete("/{id}", a.DeleteAllowList())
 	r.Post("/{id}/add", a.AddToList())
 	r.Post("/{id}/remove", a.RemoveFromList())
 	return r
+}
+
+func (a *AllowListResource) ListAllLists() http.HandlerFunc {
+	return func(resp http.ResponseWriter, req *http.Request) {
+		after := ParseIntDefault(req.URL.Query().Get("after"), -1)
+		limit := ParseIntDefault(req.URL.Query().Get("limit"), 10)
+
+		result, err := a.queries.ListAllLists(req.Context(), database.ListAllListsParams{
+			ID:    after,
+			Limit: limit,
+		})
+
+		if err != nil {
+			panic(err)
+		}
+
+		resultBytes, err := json.Marshal(result)
+		if err != nil {
+			panic(err)
+		}
+
+		resp.WriteHeader(200)
+		resp.Write(resultBytes)
+	}
 }
 
 func (a *AllowListResource) ListAllowList() http.HandlerFunc {

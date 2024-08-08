@@ -52,6 +52,39 @@ func (q *Queries) DeleteAllowList(ctx context.Context, id int32) error {
 	return err
 }
 
+const listAllLists = `-- name: ListAllLists :many
+SELECT id, name
+FROM allowlist
+WHERE id > $1
+ORDER BY id
+LIMIT $2
+`
+
+type ListAllListsParams struct {
+	ID    int32
+	Limit int32
+}
+
+func (q *Queries) ListAllLists(ctx context.Context, arg ListAllListsParams) ([]Allowlist, error) {
+	rows, err := q.db.Query(ctx, listAllLists, arg.ID, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Allowlist
+	for rows.Next() {
+		var i Allowlist
+		if err := rows.Scan(&i.ID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listEntriesForAllowList = `-- name: ListEntriesForAllowList :many
 SELECT DISTINCT ip_addr
 FROM allowlist_entry 

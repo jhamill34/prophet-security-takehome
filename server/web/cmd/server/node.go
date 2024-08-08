@@ -2,8 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
-	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jhamill34/prophet-security-takehome/server/database/pkg/database"
@@ -23,55 +23,43 @@ func (r *NodeResource) Path() string {
 
 func (n *NodeResource) Handler() http.Handler {
 	r := chi.NewRouter()
-	r.Get("/all", n.ListAllNodes())
 	r.Get("/", n.ListFilteredNodes())
 	return r
 }
 
-func (n *NodeResource) ListAllNodes() http.HandlerFunc {
+func (n *NodeResource) ListFilteredNodes() http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
-		cursor := req.URL.Query().Get("after")
-		limitStr := req.URL.Query().Get("limit")
-
-		var limit int64
 		var err error
-		if limitStr == "" {
-			limit = 10
-		} else {
-			limit, err = strconv.ParseInt(limitStr, 10, 32)
+
+		cursor := req.URL.Query().Get("after")
+		allowListIdStr := req.URL.Query().Get("allowlistId")
+		limit := ParseIntDefault(req.URL.Query().Get("limit"), 10)
+
+		var result []string
+		if allowListIdStr == "" {
+			result, err = n.queries.ListAllNodes(req.Context(), database.ListAllNodesParams{
+				IpAddr: cursor,
+				Limit:  limit,
+			})
 			if err != nil {
 				panic(err)
 			}
-		}
+		} else {
+			allowListId := AssertInt(allowListIdStr)
+			slog.Debug(
+				"Parsed out allowlistId",
+				slog.Int64("allowlistId", int64(allowListId)),
+				slog.String("allowlistIdStr", allowListIdStr),
+			)
+			result, err = n.queries.ListFilteredAllowlistNodes(req.Context(), database.ListFilteredAllowlistNodesParams{
+				IpAddr: cursor,
+				Limit:  limit,
+				ListID: allowListId,
+			})
 
-		result, err := n.queries.ListAllExistingNodes(req.Context(), database.ListAllExistingNodesParams{
-			IpAddr: cursor,
-			Limit:  int32(limit),
-		})
-
-		if err != nil {
-			panic(err)
-		}
-
-		marshaled, err := json.Marshal(result)
-		if err != nil {
-			panic(err)
-		}
-
-		resp.WriteHeader(200)
-		resp.Write(marshaled)
-	}
-}
-
-func (n *NodeResource) ListFilteredNodes() http.HandlerFunc {
-	return func(resp http.ResponseWriter, req *http.Request) {
-		result, err := n.queries.ListAllExistingNodes(req.Context(), database.ListAllExistingNodesParams{
-			IpAddr: "",
-			Limit:  10,
-		})
-
-		if err != nil {
-			panic(err)
+			if err != nil {
+				panic(err)
+			}
 		}
 
 		marshaled, err := json.Marshal(result)

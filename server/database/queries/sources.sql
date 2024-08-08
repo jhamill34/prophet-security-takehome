@@ -5,6 +5,14 @@ ON CONFLICT(name)
 DO NOTHING
 RETURNING *;
 
+-- name: ListAllSources :many
+SELECT * 
+FROM sources
+WHERE 1=1
+AND id > $1
+ORDER BY id
+LIMIT $2;
+
 -- name: ListEligableSources :many
 SELECT *
 FROM sources
@@ -22,17 +30,17 @@ LIMIT 1;
 -- name: PrepareExecution :one
 UPDATE sources
 SET last_execution = now(), version = version + 1
-WHERE name = $1
+WHERE id = $1
 RETURNING *;
 
 -- name: StopSource :one
 UPDATE sources 
 SET running = FALSE, version = version + 1
-WHERE name = $1
+WHERE id = $1
 RETURNING *;
 
 -- name: StartSource :one
 UPDATE sources 
 SET running = TRUE
-WHERE name = $1
+WHERE id = $1
 RETURNING *;

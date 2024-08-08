@@ -26,9 +26,56 @@ func (s *SourceResource) Path() string {
 func (s *SourceResource) Handler() http.Handler {
 	r := chi.NewRouter()
 	r.Post("/", s.CreateSource())
-	r.Post("/{sourceName}/start", s.StartSource())
-	r.Post("/{sourceName}/stop", s.StopSource())
+	r.Get("/", s.ListSources())
+	r.Get("/{id}", s.ListSourcesNodes())
+	r.Post("/{id}/start", s.StartSource())
+	r.Post("/{id}/stop", s.StopSource())
 	return r
+}
+
+func (s *SourceResource) ListSources() http.HandlerFunc {
+	return func(resp http.ResponseWriter, req *http.Request) {
+		after := ParseIntDefault(req.URL.Query().Get("after"), -1)
+		limit := ParseIntDefault(req.URL.Query().Get("limit"), 10)
+
+		result, err := s.queries.ListAllSources(req.Context(), database.ListAllSourcesParams{
+			ID:    after,
+			Limit: limit,
+		})
+		if err != nil {
+			panic(err)
+		}
+
+		resultBytes, err := json.Marshal(result)
+		if err != nil {
+			panic(err)
+		}
+
+		resp.WriteHeader(200)
+		resp.Write(resultBytes)
+	}
+}
+
+func (s *SourceResource) ListSourcesNodes() http.HandlerFunc {
+	return func(resp http.ResponseWriter, req *http.Request) {
+		sourceId := AssertInt(chi.URLParam(req, "id"))
+		after := req.URL.Query().Get("after")
+		limit := ParseIntDefault(req.URL.Query().Get("limit"), 10)
+
+		result, err := s.queries.ListSourcesNodes(req.Context(), database.ListSourcesNodesParams{
+			IpAddr: after,
+			Limit:  limit,
+			ID:     sourceId,
+		})
+
+		if err != nil {
+			panic(err)
+		}
+
+		resultBytes, err := json.Marshal(result)
+		resp.WriteHeader(200)
+		resp.Write(resultBytes)
+	}
 }
 
 type CreateSourceInput struct {
@@ -73,9 +120,9 @@ func (s *SourceResource) CreateSource() http.HandlerFunc {
 
 func (s *SourceResource) StartSource() http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
-		sourceName := chi.URLParam(req, "sourceName")
+		id := AssertInt(chi.URLParam(req, "id"))
 
-		_, err := s.queries.StartSource(req.Context(), sourceName)
+		_, err := s.queries.StartSource(req.Context(), id)
 		if err != nil {
 			panic(err)
 		}
@@ -86,9 +133,9 @@ func (s *SourceResource) StartSource() http.HandlerFunc {
 
 func (s *SourceResource) StopSource() http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
-		sourceName := chi.URLParam(req, "sourceName")
+		id := AssertInt(chi.URLParam(req, "id"))
 
-		_, err := s.queries.StopSource(req.Context(), sourceName)
+		_, err := s.queries.StopSource(req.Context(), id)
 		if err != nil {
 			panic(err)
 		}

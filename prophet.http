@@ -1,0 +1,94 @@
+##################################################
+# Node Endpoints
+##################################################
+
+# List aggregated nodes
+GET http://localhost:3333/nodes
+
+# List aggregated nodes with applied allowlist
+GET http://localhost:3333/nodes?allowlistId=2
+
+# List Nodes for a source 
+GET http://localhost:3333/sources/1
+
+# List Nodes for another source
+GET http://localhost:3333/sources/2
+
+
+##################################################
+# Allowlist Endpoints
+##################################################
+
+# List all allowlists
+GET http://localhost:3333/allowlist
+
+# Create an allowlist
+POST http://localhost:3333/allowlist
+Content-Type: application/json
+
+{
+    "name": "Default"
+}
+
+
+# Delete an allowlist
+DELETE http://localhost:3333/allowlist/2
+
+# List IPs in an allowlist
+GET http://localhost:3333/allowlist/2
+
+# Add an IP to an allowlist
+POST http://localhost:3333/allowlist/2/add
+
+{
+    "ip_addr": "127.0.0.1"
+}
+
+# Remove an IP from an allowlist
+POST http://localhost:3333/allowlist/2/remove
+
+{
+    "ip_addr": "127.0.0.1"
+}
+
+
+##################################################
+# Source Endpoints
+##################################################
+
+# List Sources
+GET http://localhost:3333/sources
+
+# Create a Source 1 (runs every 30 seconds)
+POST http://localhost:3333/sources
+Content-Type: application/json
+
+{
+    "name": "source_1",
+    "url": "http://localhost:3334/data1.csv",
+    "period": "00:00:30"
+}
+
+# Create a Source 2 (runs every minute)
+POST http://localhost:3333/sources
+Content-Type: application/json
+
+{
+    "name": "source_2",
+    "url": "http://localhost:3334/data2.csv",
+    "period": "00:01:00"
+}
+
+# Stop Source 1
+POST http://localhost:3333/sources/1/stop
+
+# Stop Source 2
+POST http://localhost:3333/sources/2/stop
+
+# Start Source 1
+POST http://localhost:3333/sources/1/start
+
+# Start Source 2
+POST http://localhost:3333/sources/2/start
+
+

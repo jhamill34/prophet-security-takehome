@@ -9,22 +9,105 @@ import (
 	"context"
 )
 
-const listAllExistingNodes = `-- name: ListAllExistingNodes :many
+const listAllNodes = `-- name: ListAllNodes :many
 SELECT DISTINCT n.ip_addr
 FROM nodes n
 INNER JOIN sources s ON s.id = n.source_id
-WHERE s.version < n.version and (n.ip_addr > $1)
+WHERE 1=1 
+AND s.version < n.version 
+AND n.ip_addr > $1
 ORDER BY n.ip_addr
 LIMIT $2
 `
 
-type ListAllExistingNodesParams struct {
+type ListAllNodesParams struct {
 	IpAddr string
 	Limit  int32
 }
 
-func (q *Queries) ListAllExistingNodes(ctx context.Context, arg ListAllExistingNodesParams) ([]string, error) {
-	rows, err := q.db.Query(ctx, listAllExistingNodes, arg.IpAddr, arg.Limit)
+func (q *Queries) ListAllNodes(ctx context.Context, arg ListAllNodesParams) ([]string, error) {
+	rows, err := q.db.Query(ctx, listAllNodes, arg.IpAddr, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var ip_addr string
+		if err := rows.Scan(&ip_addr); err != nil {
+			return nil, err
+		}
+		items = append(items, ip_addr)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listFilteredAllowlistNodes = `-- name: ListFilteredAllowlistNodes :many
+SELECT DISTINCT n.ip_addr
+FROM nodes n
+INNER JOIN sources s ON s.id = n.source_id
+WHERE 1=1
+AND s.version < n.version 
+AND n.ip_addr > $1
+AND n.ip_addr NOT IN (
+    SELECT a.ip_addr
+    FROM allowlist_entry a 
+    WHERE 1=1 
+    AND a.list_id = $3
+)
+ORDER BY n.ip_addr
+LIMIT $2
+`
+
+type ListFilteredAllowlistNodesParams struct {
+	IpAddr string
+	Limit  int32
+	ListID int32
+}
+
+func (q *Queries) ListFilteredAllowlistNodes(ctx context.Context, arg ListFilteredAllowlistNodesParams) ([]string, error) {
+	rows, err := q.db.Query(ctx, listFilteredAllowlistNodes, arg.IpAddr, arg.Limit, arg.ListID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var ip_addr string
+		if err := rows.Scan(&ip_addr); err != nil {
+			return nil, err
+		}
+		items = append(items, ip_addr)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listSourcesNodes = `-- name: ListSourcesNodes :many
+SELECT DISTINCT n.ip_addr
+FROM nodes n
+INNER JOIN sources s ON s.id = n.source_id
+WHERE 1=1 
+AND s.version < n.version 
+AND s.id = $3
+AND n.ip_addr > $1
+ORDER BY n.ip_addr
+LIMIT $2
+`
+
+type ListSourcesNodesParams struct {
+	IpAddr string
+	Limit  int32
+	ID     int32
+}
+
+func (q *Queries) ListSourcesNodes(ctx context.Context, arg ListSourcesNodesParams) ([]string, error) {
+	rows, err := q.db.Query(ctx, listSourcesNodes, arg.IpAddr, arg.Limit, arg.ID)
 	if err != nil {
 		return nil, err
 	}

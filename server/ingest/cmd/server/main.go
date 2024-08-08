@@ -48,7 +48,7 @@ func (i *Ingester) Run(ctx context.Context) {
 		for _, s := range sources {
 			childCtx := context.WithValue(ctx, "job_name", s.Name)
 			slog.InfoContext(ctx, "Bumping source version")
-			s, err := i.queries.PrepareExecution(ctx, s.Name)
+			s, err := i.queries.PrepareExecution(ctx, s.ID)
 			if err != nil {
 				panic(err)
 			}

@@ -1,3 +1,10 @@
+-- name: ListAllLists :many 
+SELECT *
+FROM allowlist
+WHERE id > $1
+ORDER BY id
+LIMIT $2;
+
 -- name: ListEntriesForAllowList :many 
 SELECT DISTINCT ip_addr
 FROM allowlist_entry 

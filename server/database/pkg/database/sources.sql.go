@@ -63,6 +63,48 @@ func (q *Queries) GetSource(ctx context.Context, name string) (Source, error) {
 	return i, err
 }
 
+const listAllSources = `-- name: ListAllSources :many
+SELECT id, name, url, period, last_execution, version, running 
+FROM sources
+WHERE 1=1
+AND id > $1
+ORDER BY id
+LIMIT $2
+`
+
+type ListAllSourcesParams struct {
+	ID    int32
+	Limit int32
+}
+
+func (q *Queries) ListAllSources(ctx context.Context, arg ListAllSourcesParams) ([]Source, error) {
+	rows, err := q.db.Query(ctx, listAllSources, arg.ID, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Source
+	for rows.Next() {
+		var i Source
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Url,
+			&i.Period,
+			&i.LastExecution,
+			&i.Version,
+			&i.Running,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listEligableSources = `-- name: ListEligableSources :many
 SELECT id, name, url, period, last_execution, version, running
 FROM sources
@@ -102,12 +144,12 @@ func (q *Queries) ListEligableSources(ctx context.Context) ([]Source, error) {
 const prepareExecution = `-- name: PrepareExecution :one
 UPDATE sources
 SET last_execution = now(), version = version + 1
-WHERE name = $1
+WHERE id = $1
 RETURNING id, name, url, period, last_execution, version, running
 `
 
-func (q *Queries) PrepareExecution(ctx context.Context, name string) (Source, error) {
-	row := q.db.QueryRow(ctx, prepareExecution, name)
+func (q *Queries) PrepareExecution(ctx context.Context, id int32) (Source, error) {
+	row := q.db.QueryRow(ctx, prepareExecution, id)
 	var i Source
 	err := row.Scan(
 		&i.ID,
@@ -124,12 +166,12 @@ func (q *Queries) PrepareExecution(ctx context.Context, name string) (Source, er
 const startSource = `-- name: StartSource :one
 UPDATE sources 
 SET running = TRUE
-WHERE name = $1
+WHERE id = $1
 RETURNING id, name, url, period, last_execution, version, running
 `
 
-func (q *Queries) StartSource(ctx context.Context, name string) (Source, error) {
-	row := q.db.QueryRow(ctx, startSource, name)
+func (q *Queries) StartSource(ctx context.Context, id int32) (Source, error) {
+	row := q.db.QueryRow(ctx, startSource, id)
 	var i Source
 	err := row.Scan(
 		&i.ID,
@@ -146,12 +188,12 @@ func (q *Queries) StartSource(ctx context.Context, name string) (Source, error) 
 const stopSource = `-- name: StopSource :one
 UPDATE sources 
 SET running = FALSE, version = version + 1
-WHERE name = $1
+WHERE id = $1
 RETURNING id, name, url, period, last_execution, version, running
 `
 
-func (q *Queries) StopSource(ctx context.Context, name string) (Source, error) {
-	row := q.db.QueryRow(ctx, stopSource, name)
+func (q *Queries) StopSource(ctx context.Context, id int32) (Source, error) {
+	row := q.db.QueryRow(ctx, stopSource, id)
 	var i Source
 	err := row.Scan(
 		&i.ID,
