@@ -1,13 +1,16 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"slices"
 	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jhamill34/prophet-security-takehome/server/database/pkg/database"
 )
@@ -30,9 +33,13 @@ func (s *SourceResource) Handler() http.Handler {
 	r := chi.NewRouter()
 	r.Post("/", s.CreateSource())
 	r.Get("/", s.ListSources())
-	r.Get("/{id}", s.ListSourcesNodes())
-	r.Post("/{id}/start", s.StartSource())
-	r.Post("/{id}/stop", s.StopSource())
+
+	r.Route("/{id}", func(r chi.Router) {
+		r.Use(s.SourceContext)
+		r.Get("/", s.ListSourcesNodes())
+		r.Post("/start", s.StartSource())
+		r.Post("/stop", s.StopSource())
+	})
 	return r
 }
 
@@ -68,57 +75,6 @@ func (s *SourceResource) ListSources() http.HandlerFunc {
 				Running:       r.Running.Bool,
 			}
 		}
-
-		Json(req, resp, result, 200)
-	}
-}
-
-func (s *SourceResource) ListSourcesNodes() http.HandlerFunc {
-	return func(resp http.ResponseWriter, req *http.Request) {
-		sourceId, err := AssertInt(chi.URLParam(req, "id"))
-		if err != nil {
-			Err(req, resp, "Expected ID to be an integer", 400, err)
-			return
-		}
-
-		after := ParseIp(req.URL.Query().Get("after"))
-		limit := ParseIntDefault(req.URL.Query().Get("limit"), 10)
-
-		dbResult, err := s.queries.ListSourcesNodes(req.Context(), database.ListSourcesNodesParams{
-			IpAddr: after,
-			Limit:  limit,
-			ID:     sourceId,
-		})
-		if err != nil {
-			InternalServerError(req, resp, err)
-			return
-		}
-
-		resultMap := make(map[string]*NodeEntry)
-		for _, r := range dbResult {
-			sourceEntry := NodeSourceEntry{
-				SourceId:      r.SourceID,
-				Version:       r.Version.Int64,
-				LastExecution: r.LastExecution.Time.Format(time.RFC3339),
-			}
-			if entry, ok := resultMap[r.IpAddr.String()]; ok {
-				entry.Sources = append(entry.Sources, sourceEntry)
-			} else {
-				resultMap[r.IpAddr.String()] = &NodeEntry{
-					IpAddr:  r.IpAddr.String(),
-					Sources: []NodeSourceEntry{sourceEntry},
-				}
-			}
-		}
-
-		result := make([]NodeEntry, 0, len(resultMap))
-		for _, v := range resultMap {
-			result = append(result, *v)
-		}
-
-		slices.SortFunc(result, func(a, b NodeEntry) int {
-			return strings.Compare(a.IpAddr, b.IpAddr)
-		})
 
 		Json(req, resp, result, 200)
 	}
@@ -174,15 +130,82 @@ func (s *SourceResource) CreateSource() http.HandlerFunc {
 	}
 }
 
-func (s *SourceResource) StartSource() http.HandlerFunc {
-	return func(resp http.ResponseWriter, req *http.Request) {
+func (s *SourceResource) SourceContext(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
 		id, err := AssertInt(chi.URLParam(req, "id"))
 		if err != nil {
 			Err(req, resp, "Expected ID to be an integer", 400, err)
 			return
 		}
 
-		_, err = s.queries.StartSource(req.Context(), id)
+		source, err := s.queries.GetSource(req.Context(), id)
+		if errors.Is(err, pgx.ErrNoRows) {
+			Err(req, resp, "Source Not Found", 404, err)
+			return
+		}
+
+		if err != nil {
+			InternalServerError(req, resp, err)
+			return
+		}
+
+		ctx := context.WithValue(req.Context(), "source", source)
+		next.ServeHTTP(resp, req.WithContext(ctx))
+	})
+}
+
+func (s *SourceResource) ListSourcesNodes() http.HandlerFunc {
+	return func(resp http.ResponseWriter, req *http.Request) {
+		source := req.Context().Value("source").(database.Source)
+
+		after := ParseIp(req.URL.Query().Get("after"))
+		limit := ParseIntDefault(req.URL.Query().Get("limit"), 10)
+
+		dbResult, err := s.queries.ListSourcesNodes(req.Context(), database.ListSourcesNodesParams{
+			IpAddr: after,
+			Limit:  limit,
+			ID:     source.ID,
+		})
+		if err != nil {
+			InternalServerError(req, resp, err)
+			return
+		}
+
+		resultMap := make(map[string]*NodeEntry)
+		for _, r := range dbResult {
+			sourceEntry := NodeSourceEntry{
+				SourceId:      r.SourceID,
+				Version:       r.Version.Int64,
+				LastExecution: r.LastExecution.Time.Format(time.RFC3339),
+			}
+			if entry, ok := resultMap[r.IpAddr.String()]; ok {
+				entry.Sources = append(entry.Sources, sourceEntry)
+			} else {
+				resultMap[r.IpAddr.String()] = &NodeEntry{
+					IpAddr:  r.IpAddr.String(),
+					Sources: []NodeSourceEntry{sourceEntry},
+				}
+			}
+		}
+
+		result := make([]NodeEntry, 0, len(resultMap))
+		for _, v := range resultMap {
+			result = append(result, *v)
+		}
+
+		slices.SortFunc(result, func(a, b NodeEntry) int {
+			return strings.Compare(a.IpAddr, b.IpAddr)
+		})
+
+		Json(req, resp, result, 200)
+	}
+}
+
+func (s *SourceResource) StartSource() http.HandlerFunc {
+	return func(resp http.ResponseWriter, req *http.Request) {
+		source := req.Context().Value("source").(database.Source)
+
+		_, err := s.queries.StartSource(req.Context(), source.ID)
 		if err != nil {
 			InternalServerError(req, resp, err)
 			return
@@ -194,13 +217,9 @@ func (s *SourceResource) StartSource() http.HandlerFunc {
 
 func (s *SourceResource) StopSource() http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
-		id, err := AssertInt(chi.URLParam(req, "id"))
-		if err != nil {
-			Err(req, resp, "Expected ID to be an integer", 400, err)
-			return
-		}
+		source := req.Context().Value("source").(database.Source)
 
-		_, err = s.queries.StopSource(req.Context(), id)
+		_, err := s.queries.StopSource(req.Context(), source.ID)
 		if err != nil {
 			InternalServerError(req, resp, err)
 			return

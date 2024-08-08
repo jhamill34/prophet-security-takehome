@@ -44,12 +44,12 @@ const getSource = `-- name: GetSource :one
 SELECT id, name, url, period, last_execution, version, running 
 FROM sources
 WHERE 1=1
-AND name = $1
+AND id = $1
 LIMIT 1
 `
 
-func (q *Queries) GetSource(ctx context.Context, name string) (Source, error) {
-	row := q.db.QueryRow(ctx, getSource, name)
+func (q *Queries) GetSource(ctx context.Context, id int32) (Source, error) {
+	row := q.db.QueryRow(ctx, getSource, id)
 	var i Source
 	err := row.Scan(
 		&i.ID,

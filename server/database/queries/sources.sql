@@ -24,7 +24,7 @@ AND running = TRUE;
 SELECT * 
 FROM sources
 WHERE 1=1
-AND name = $1
+AND id = $1
 LIMIT 1;
 
 -- name: PrepareExecution :one
