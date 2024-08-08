@@ -18,6 +18,12 @@ INSERT INTO allowlist (name)
 VALUES ($1)
 RETURNING *;
 
+-- name: GetAllowList :one
+SELECT * 
+FROM allowlist
+WHERE 1=1
+AND id = $1;
+
 -- name: DeleteAllowList :exec
 DELETE FROM allowlist
 WHERE id = $1;

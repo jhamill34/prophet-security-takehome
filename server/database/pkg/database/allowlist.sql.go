@@ -53,6 +53,20 @@ func (q *Queries) DeleteAllowList(ctx context.Context, id int32) error {
 	return err
 }
 
+const getAllowList = `-- name: GetAllowList :one
+SELECT id, name 
+FROM allowlist
+WHERE 1=1
+AND id = $1
+`
+
+func (q *Queries) GetAllowList(ctx context.Context, id int32) (Allowlist, error) {
+	row := q.db.QueryRow(ctx, getAllowList, id)
+	var i Allowlist
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
 const listAllLists = `-- name: ListAllLists :many
 SELECT id, name
 FROM allowlist

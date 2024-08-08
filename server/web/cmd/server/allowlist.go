@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/netip"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5"
 	"github.com/jhamill34/prophet-security-takehome/server/database/pkg/database"
 )
 
@@ -27,11 +30,15 @@ func (a *AllowListResource) Handler() http.Handler {
 	r := chi.NewRouter()
 	r.Get("/", a.ListAllLists())
 	r.Post("/", a.CreateAllowList())
-	r.Delete("/{id}", a.DeleteAllowList())
 
-	r.Get("/{id}/entry", a.ListAllowList())
-	r.Post("/{id}/entry", a.AddToList())
-	r.Delete("/{id}/entry/{entryId}", a.RemoveFromList())
+	r.Route("/{id}", func(r chi.Router) {
+		r.Use(a.AllowListContext)
+
+		r.Delete("/", a.DeleteAllowList())
+		r.Get("/entry", a.ListAllowList())
+		r.Post("/entry", a.AddToList())
+		r.Delete("/entry/{entryId}", a.RemoveFromList())
+	})
 
 	return r
 }
@@ -63,34 +70,6 @@ func (a *AllowListResource) ListAllLists() http.HandlerFunc {
 	}
 }
 
-func (a *AllowListResource) ListAllowList() http.HandlerFunc {
-	return func(resp http.ResponseWriter, req *http.Request) {
-		id, err := AssertInt(chi.URLParam(req, "id"))
-		if err != nil {
-			Err(req, resp, "Expected ID to be an integer", 400, err)
-			return
-		}
-
-		dbResult, err := a.queries.ListEntriesForAllowList(req.Context(), id)
-		if err != nil {
-			InternalServerError(req, resp, err)
-			return
-		}
-
-		entries := make([]AllowlistEntryItem, len(dbResult))
-
-		for i, r := range dbResult {
-			entries[i] = AllowlistEntryItem{
-				ID:     r.ID,
-				Cidr:   r.Cidr.String(),
-				ListID: r.ListID,
-			}
-		}
-
-		Json(req, resp, entries, 200)
-	}
-}
-
 type CreateAllowListInput struct {
 	Name string `json:"name"`
 }
@@ -119,15 +98,60 @@ func (a *AllowListResource) CreateAllowList() http.HandlerFunc {
 	}
 }
 
-func (a *AllowListResource) DeleteAllowList() http.HandlerFunc {
-	return func(resp http.ResponseWriter, req *http.Request) {
+func (a *AllowListResource) AllowListContext(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
 		id, err := AssertInt(chi.URLParam(req, "id"))
 		if err != nil {
-			Err(req, resp, "ID should be an integer", 400, err)
+			Err(req, resp, "Expected ID to be an integer", 400, err)
 			return
 		}
 
-		err = a.queries.DeleteAllowList(req.Context(), int32(id))
+		list, err := a.queries.GetAllowList(req.Context(), id)
+		if errors.Is(err, pgx.ErrNoRows) {
+			Err(req, resp, "Allow List Not Found", 404, err)
+			return
+		}
+
+		if err != nil {
+			InternalServerError(req, resp, err)
+			return
+		}
+
+		ctx := context.WithValue(req.Context(), "allowlist", list)
+
+		next.ServeHTTP(resp, req.WithContext(ctx))
+	})
+}
+
+func (a *AllowListResource) ListAllowList() http.HandlerFunc {
+	return func(resp http.ResponseWriter, req *http.Request) {
+		list := req.Context().Value("allowlist").(database.Allowlist)
+
+		dbResult, err := a.queries.ListEntriesForAllowList(req.Context(), list.ID)
+		if err != nil {
+			InternalServerError(req, resp, err)
+			return
+		}
+
+		entries := make([]AllowlistEntryItem, len(dbResult))
+
+		for i, r := range dbResult {
+			entries[i] = AllowlistEntryItem{
+				ID:     r.ID,
+				Cidr:   r.Cidr.String(),
+				ListID: r.ListID,
+			}
+		}
+
+		Json(req, resp, entries, 200)
+	}
+}
+
+func (a *AllowListResource) DeleteAllowList() http.HandlerFunc {
+	return func(resp http.ResponseWriter, req *http.Request) {
+		list := req.Context().Value("allowlist").(database.Allowlist)
+
+		err := a.queries.DeleteAllowList(req.Context(), list.ID)
 		if err != nil {
 			InternalServerError(req, resp, err)
 		}
@@ -142,14 +166,10 @@ type ListEntryInput struct {
 
 func (a *AllowListResource) AddToList() http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
-		listId, err := AssertInt(chi.URLParam(req, "id"))
-		if err != nil {
-			Err(req, resp, "ID should be an integer", 400, err)
-			return
-		}
+		list := req.Context().Value("allowlist").(database.Allowlist)
 
 		var input ListEntryInput
-		err = json.NewDecoder(req.Body).Decode(&input)
+		err := json.NewDecoder(req.Body).Decode(&input)
 		if err != nil {
 			Err(req, resp, "Unable to parse JSON input", 400, err)
 			return
@@ -163,7 +183,7 @@ func (a *AllowListResource) AddToList() http.HandlerFunc {
 
 		dbResult, err := a.queries.AddToAllowlist(req.Context(), database.AddToAllowlistParams{
 			Cidr:   ipAddr,
-			ListID: listId,
+			ListID: list.ID,
 		})
 		if err != nil {
 			InternalServerError(req, resp, err)
@@ -182,11 +202,7 @@ func (a *AllowListResource) AddToList() http.HandlerFunc {
 
 func (a *AllowListResource) RemoveFromList() http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
-		listId, err := AssertInt(chi.URLParam(req, "id"))
-		if err != nil {
-			Err(req, resp, "Expected ID to be an integer", 400, err)
-			return
-		}
+		list := req.Context().Value("allowlist").(database.Allowlist)
 
 		entryId, err := AssertInt(chi.URLParam(req, "entryId"))
 		if err != nil {
@@ -195,7 +211,7 @@ func (a *AllowListResource) RemoveFromList() http.HandlerFunc {
 		}
 
 		err = a.queries.RemoveFromAllowlist(req.Context(), database.RemoveFromAllowlistParams{
-			ListID: listId,
+			ListID: list.ID,
 			ID:     entryId,
 		})
 		if err != nil {
