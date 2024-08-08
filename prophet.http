@@ -8,6 +8,9 @@ GET http://localhost:3333/nodes
 # List aggregated nodes with applied allowlist
 GET http://localhost:3333/nodes?allowlistId=2
 
+# List aggregated nodes with applied allowlist inverted
+GET http://localhost:3333/nodes?allowlistId=2&invert=true
+
 # List Nodes for a source 
 GET http://localhost:3333/sources/1
 

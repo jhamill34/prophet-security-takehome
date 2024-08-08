@@ -8,10 +8,12 @@ package database
 import (
 	"context"
 	"net/netip"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const listAllNodes = `-- name: ListAllNodes :many
-SELECT DISTINCT n.ip_addr
+SELECT n.ip_addr, n.source_id, n.version, s.last_execution
 FROM nodes n
 INNER JOIN sources s ON s.id = n.source_id
 WHERE 1=1 
@@ -26,19 +28,31 @@ type ListAllNodesParams struct {
 	Limit  int32
 }
 
-func (q *Queries) ListAllNodes(ctx context.Context, arg ListAllNodesParams) ([]netip.Addr, error) {
+type ListAllNodesRow struct {
+	IpAddr        netip.Addr
+	SourceID      int32
+	Version       pgtype.Int8
+	LastExecution pgtype.Timestamp
+}
+
+func (q *Queries) ListAllNodes(ctx context.Context, arg ListAllNodesParams) ([]ListAllNodesRow, error) {
 	rows, err := q.db.Query(ctx, listAllNodes, arg.IpAddr, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []netip.Addr
+	var items []ListAllNodesRow
 	for rows.Next() {
-		var ip_addr netip.Addr
-		if err := rows.Scan(&ip_addr); err != nil {
+		var i ListAllNodesRow
+		if err := rows.Scan(
+			&i.IpAddr,
+			&i.SourceID,
+			&i.Version,
+			&i.LastExecution,
+		); err != nil {
 			return nil, err
 		}
-		items = append(items, ip_addr)
+		items = append(items, i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -47,7 +61,7 @@ func (q *Queries) ListAllNodes(ctx context.Context, arg ListAllNodesParams) ([]n
 }
 
 const listFilteredAllowlistNodes = `-- name: ListFilteredAllowlistNodes :many
-SELECT DISTINCT n.ip_addr
+SELECT n.ip_addr, n.source_id, n.version, s.last_execution
 FROM nodes n
 INNER JOIN sources s ON s.id = n.source_id
 WHERE 1=1
@@ -69,19 +83,31 @@ type ListFilteredAllowlistNodesParams struct {
 	ListID int32
 }
 
-func (q *Queries) ListFilteredAllowlistNodes(ctx context.Context, arg ListFilteredAllowlistNodesParams) ([]netip.Addr, error) {
+type ListFilteredAllowlistNodesRow struct {
+	IpAddr        netip.Addr
+	SourceID      int32
+	Version       pgtype.Int8
+	LastExecution pgtype.Timestamp
+}
+
+func (q *Queries) ListFilteredAllowlistNodes(ctx context.Context, arg ListFilteredAllowlistNodesParams) ([]ListFilteredAllowlistNodesRow, error) {
 	rows, err := q.db.Query(ctx, listFilteredAllowlistNodes, arg.IpAddr, arg.Limit, arg.ListID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []netip.Addr
+	var items []ListFilteredAllowlistNodesRow
 	for rows.Next() {
-		var ip_addr netip.Addr
-		if err := rows.Scan(&ip_addr); err != nil {
+		var i ListFilteredAllowlistNodesRow
+		if err := rows.Scan(
+			&i.IpAddr,
+			&i.SourceID,
+			&i.Version,
+			&i.LastExecution,
+		); err != nil {
 			return nil, err
 		}
-		items = append(items, ip_addr)
+		items = append(items, i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -90,7 +116,7 @@ func (q *Queries) ListFilteredAllowlistNodes(ctx context.Context, arg ListFilter
 }
 
 const listNodesWithoutAllowlist = `-- name: ListNodesWithoutAllowlist :many
-SELECT DISTINCT n.ip_addr
+SELECT n.ip_addr, n.source_id, n.version, s.last_execution
 FROM nodes n
 INNER JOIN sources s ON s.id = n.source_id
 WHERE 1=1
@@ -112,19 +138,31 @@ type ListNodesWithoutAllowlistParams struct {
 	ListID int32
 }
 
-func (q *Queries) ListNodesWithoutAllowlist(ctx context.Context, arg ListNodesWithoutAllowlistParams) ([]netip.Addr, error) {
+type ListNodesWithoutAllowlistRow struct {
+	IpAddr        netip.Addr
+	SourceID      int32
+	Version       pgtype.Int8
+	LastExecution pgtype.Timestamp
+}
+
+func (q *Queries) ListNodesWithoutAllowlist(ctx context.Context, arg ListNodesWithoutAllowlistParams) ([]ListNodesWithoutAllowlistRow, error) {
 	rows, err := q.db.Query(ctx, listNodesWithoutAllowlist, arg.IpAddr, arg.Limit, arg.ListID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []netip.Addr
+	var items []ListNodesWithoutAllowlistRow
 	for rows.Next() {
-		var ip_addr netip.Addr
-		if err := rows.Scan(&ip_addr); err != nil {
+		var i ListNodesWithoutAllowlistRow
+		if err := rows.Scan(
+			&i.IpAddr,
+			&i.SourceID,
+			&i.Version,
+			&i.LastExecution,
+		); err != nil {
 			return nil, err
 		}
-		items = append(items, ip_addr)
+		items = append(items, i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -133,7 +171,7 @@ func (q *Queries) ListNodesWithoutAllowlist(ctx context.Context, arg ListNodesWi
 }
 
 const listSourcesNodes = `-- name: ListSourcesNodes :many
-SELECT DISTINCT n.ip_addr
+SELECT n.ip_addr, n.source_id, n.version, s.last_execution
 FROM nodes n
 INNER JOIN sources s ON s.id = n.source_id
 WHERE 1=1 
@@ -150,19 +188,31 @@ type ListSourcesNodesParams struct {
 	ID     int32
 }
 
-func (q *Queries) ListSourcesNodes(ctx context.Context, arg ListSourcesNodesParams) ([]netip.Addr, error) {
+type ListSourcesNodesRow struct {
+	IpAddr        netip.Addr
+	SourceID      int32
+	Version       pgtype.Int8
+	LastExecution pgtype.Timestamp
+}
+
+func (q *Queries) ListSourcesNodes(ctx context.Context, arg ListSourcesNodesParams) ([]ListSourcesNodesRow, error) {
 	rows, err := q.db.Query(ctx, listSourcesNodes, arg.IpAddr, arg.Limit, arg.ID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []netip.Addr
+	var items []ListSourcesNodesRow
 	for rows.Next() {
-		var ip_addr netip.Addr
-		if err := rows.Scan(&ip_addr); err != nil {
+		var i ListSourcesNodesRow
+		if err := rows.Scan(
+			&i.IpAddr,
+			&i.SourceID,
+			&i.Version,
+			&i.LastExecution,
+		); err != nil {
 			return nil, err
 		}
-		items = append(items, ip_addr)
+		items = append(items, i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

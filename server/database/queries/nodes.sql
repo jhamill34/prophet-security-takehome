@@ -1,5 +1,5 @@
 -- name: ListAllNodes :many
-SELECT DISTINCT n.ip_addr
+SELECT n.ip_addr, n.source_id, n.version, s.last_execution
 FROM nodes n
 INNER JOIN sources s ON s.id = n.source_id
 WHERE 1=1 
@@ -9,7 +9,7 @@ ORDER BY n.ip_addr
 LIMIT $2;
 
 -- name: ListSourcesNodes :many
-SELECT DISTINCT n.ip_addr
+SELECT n.ip_addr, n.source_id, n.version, s.last_execution
 FROM nodes n
 INNER JOIN sources s ON s.id = n.source_id
 WHERE 1=1 
@@ -20,7 +20,7 @@ ORDER BY n.ip_addr
 LIMIT $2;
 
 -- name: ListNodesWithoutAllowlist :many
-SELECT DISTINCT n.ip_addr
+SELECT n.ip_addr, n.source_id, n.version, s.last_execution
 FROM nodes n
 INNER JOIN sources s ON s.id = n.source_id
 WHERE 1=1
@@ -36,7 +36,7 @@ ORDER BY n.ip_addr
 LIMIT $2;
 
 -- name: ListFilteredAllowlistNodes :many
-SELECT DISTINCT n.ip_addr
+SELECT n.ip_addr, n.source_id, n.version, s.last_execution
 FROM nodes n
 INNER JOIN sources s ON s.id = n.source_id
 WHERE 1=1

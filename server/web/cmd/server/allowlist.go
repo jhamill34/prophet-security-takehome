@@ -42,7 +42,7 @@ func (a *AllowListResource) ListAllLists() http.HandlerFunc {
 		after := ParseIntDefault(req.URL.Query().Get("after"), -1)
 		limit := ParseIntDefault(req.URL.Query().Get("limit"), 10)
 
-		result, err := a.queries.ListAllLists(req.Context(), database.ListAllListsParams{
+		dbResult, err := a.queries.ListAllLists(req.Context(), database.ListAllListsParams{
 			ID:    after,
 			Limit: limit,
 		})
@@ -51,13 +51,19 @@ func (a *AllowListResource) ListAllLists() http.HandlerFunc {
 			panic(err)
 		}
 
-		resultBytes, err := json.Marshal(result)
-		if err != nil {
-			panic(err)
+		result := make([]AllowlistEntry, len(dbResult))
+		for i, r := range dbResult {
+			result[i] = AllowlistEntry{
+				ID:   r.ID,
+				Name: r.Name,
+			}
 		}
 
 		resp.WriteHeader(200)
-		resp.Write(resultBytes)
+		err = Json(resp, result)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -65,17 +71,26 @@ func (a *AllowListResource) ListAllowList() http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
 		id := AssertInt(chi.URLParam(req, "id"))
 
-		entries, err := a.queries.ListEntriesForAllowList(req.Context(), id)
+		dbResult, err := a.queries.ListEntriesForAllowList(req.Context(), id)
 		if err != nil {
 			panic(err)
 		}
 
-		result, err := json.Marshal(entries)
+		entries := make([]AllowlistEntryItem, len(dbResult))
+
+		for i, r := range dbResult {
+			entries[i] = AllowlistEntryItem{
+				ID:     r.ID,
+				Cidr:   r.IpAddr.String(),
+				ListID: r.ListID,
+			}
+		}
+
+		resp.WriteHeader(200)
+		err = Json(resp, entries)
 		if err != nil {
 			panic(err)
 		}
-		resp.WriteHeader(200)
-		resp.Write(result)
 	}
 }
 
@@ -87,17 +102,18 @@ func (a *AllowListResource) CreateAllowList() http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
 		var input CreateAllowListInput
 		json.NewDecoder(req.Body).Decode(&input)
-		list, err := a.queries.CreateAllowList(req.Context(), input.Name)
+		dbResult, err := a.queries.CreateAllowList(req.Context(), input.Name)
 		if err != nil {
 			panic(err)
 		}
 
-		respBytes, err := json.Marshal(list)
-		if err != nil {
-			panic(err)
+		entry := AllowlistEntry{
+			ID:   dbResult.ID,
+			Name: dbResult.Name,
 		}
+
 		resp.WriteHeader(201)
-		resp.Write(respBytes)
+		err = Json(resp, entry)
 	}
 }
 
@@ -136,7 +152,7 @@ func (a *AllowListResource) AddToList() http.HandlerFunc {
 			panic(err)
 		}
 
-		entry, err := a.queries.AddToAllowlist(req.Context(), database.AddToAllowlistParams{
+		dbResult, err := a.queries.AddToAllowlist(req.Context(), database.AddToAllowlistParams{
 			IpAddr: ipAddr,
 			ListID: listId,
 		})
@@ -144,13 +160,17 @@ func (a *AllowListResource) AddToList() http.HandlerFunc {
 			panic(err)
 		}
 
-		entryBytes, err := json.Marshal(entry)
-		if err != nil {
-			panic(err)
+		entry := AllowlistEntryItem{
+			ID:     dbResult.ID,
+			Cidr:   dbResult.IpAddr.String(),
+			ListID: dbResult.ListID,
 		}
 
 		resp.WriteHeader(201)
-		resp.Write(entryBytes)
+		err = Json(resp, entry)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 

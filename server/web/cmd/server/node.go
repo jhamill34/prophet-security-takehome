@@ -1,9 +1,10 @@
 package main
 
 import (
-	"encoding/json"
 	"net/http"
-	"net/netip"
+	"slices"
+	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jhamill34/prophet-security-takehome/server/database/pkg/database"
@@ -29,49 +30,104 @@ func (n *NodeResource) Handler() http.Handler {
 
 func (n *NodeResource) ListFilteredNodes() http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
-		var err error
-
 		cursor := ParseIp(req.URL.Query().Get("after"))
 		allowListIdStr := req.URL.Query().Get("allowlistId")
 		limit := ParseIntDefault(req.URL.Query().Get("limit"), 10)
 		invert := req.URL.Query().Get("invert")
 
-		var result []netip.Addr
+		resultMap := make(map[string]*NodeEntry, 0)
 		if allowListIdStr == "" {
-			result, err = n.queries.ListAllNodes(req.Context(), database.ListAllNodesParams{
+			dbResult, err := n.queries.ListAllNodes(req.Context(), database.ListAllNodesParams{
 				IpAddr: cursor,
 				Limit:  limit,
 			})
 			if err != nil {
 				panic(err)
 			}
+
+			for _, r := range dbResult {
+				sourceEntry := NodeSourceEntry{
+					SourceId:      r.SourceID,
+					Version:       r.Version.Int64,
+					LastExecution: r.LastExecution.Time.Format(time.RFC3339),
+				}
+				if entry, ok := resultMap[r.IpAddr.String()]; ok {
+					entry.Sources = append(entry.Sources, sourceEntry)
+				} else {
+					resultMap[r.IpAddr.String()] = &NodeEntry{
+						IpAddr:  r.IpAddr.String(),
+						Sources: []NodeSourceEntry{sourceEntry},
+					}
+				}
+			}
 		} else {
 			allowListId := AssertInt(allowListIdStr)
 			if invert != "true" {
-				result, err = n.queries.ListNodesWithoutAllowlist(req.Context(), database.ListNodesWithoutAllowlistParams{
+				dbResult, err := n.queries.ListNodesWithoutAllowlist(req.Context(), database.ListNodesWithoutAllowlistParams{
 					IpAddr: cursor,
 					Limit:  limit,
 					ListID: allowListId,
 				})
-			} else {
-				result, err = n.queries.ListFilteredAllowlistNodes(req.Context(), database.ListFilteredAllowlistNodesParams{
-					IpAddr: cursor,
-					Limit:  limit,
-					ListID: allowListId,
-				})
-			}
+				if err != nil {
+					panic(err)
+				}
 
-			if err != nil {
-				panic(err)
+				for _, r := range dbResult {
+					sourceEntry := NodeSourceEntry{
+						SourceId:      r.SourceID,
+						Version:       r.Version.Int64,
+						LastExecution: r.LastExecution.Time.Format(time.RFC3339),
+					}
+					if entry, ok := resultMap[r.IpAddr.String()]; ok {
+						entry.Sources = append(entry.Sources, sourceEntry)
+					} else {
+						resultMap[r.IpAddr.String()] = &NodeEntry{
+							IpAddr:  r.IpAddr.String(),
+							Sources: []NodeSourceEntry{sourceEntry},
+						}
+					}
+				}
+			} else {
+				dbResult, err := n.queries.ListFilteredAllowlistNodes(req.Context(), database.ListFilteredAllowlistNodesParams{
+					IpAddr: cursor,
+					Limit:  limit,
+					ListID: allowListId,
+				})
+				if err != nil {
+					panic(err)
+				}
+
+				for _, r := range dbResult {
+					sourceEntry := NodeSourceEntry{
+						SourceId:      r.SourceID,
+						Version:       r.Version.Int64,
+						LastExecution: r.LastExecution.Time.Format(time.RFC3339),
+					}
+					if entry, ok := resultMap[r.IpAddr.String()]; ok {
+						entry.Sources = append(entry.Sources, sourceEntry)
+					} else {
+						resultMap[r.IpAddr.String()] = &NodeEntry{
+							IpAddr:  r.IpAddr.String(),
+							Sources: []NodeSourceEntry{sourceEntry},
+						}
+					}
+				}
 			}
 		}
 
-		marshaled, err := json.Marshal(result)
+		result := make([]NodeEntry, 0, len(resultMap))
+		for _, v := range resultMap {
+			result = append(result, *v)
+		}
+
+		slices.SortFunc(result, func(a, b NodeEntry) int {
+			return strings.Compare(a.IpAddr, b.IpAddr)
+		})
+
+		resp.WriteHeader(200)
+		err := Json(resp, result)
 		if err != nil {
 			panic(err)
 		}
-
-		resp.WriteHeader(200)
-		resp.Write(marshaled)
 	}
 }

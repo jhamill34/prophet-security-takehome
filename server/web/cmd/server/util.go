@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"io"
 	"net/netip"
 	"strconv"
 )
@@ -38,4 +40,10 @@ func ParseIp(val string) netip.Addr {
 	}
 
 	return addr
+}
+
+func Json(w io.Writer, val any) error {
+	encoder := json.NewEncoder(w)
+	encoder.SetIndent("", " ")
+	return encoder.Encode(val)
 }

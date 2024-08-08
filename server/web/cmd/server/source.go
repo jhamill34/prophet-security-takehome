@@ -3,6 +3,9 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"slices"
+	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -38,7 +41,7 @@ func (s *SourceResource) ListSources() http.HandlerFunc {
 		after := ParseIntDefault(req.URL.Query().Get("after"), -1)
 		limit := ParseIntDefault(req.URL.Query().Get("limit"), 10)
 
-		result, err := s.queries.ListAllSources(req.Context(), database.ListAllSourcesParams{
+		dbResult, err := s.queries.ListAllSources(req.Context(), database.ListAllSourcesParams{
 			ID:    after,
 			Limit: limit,
 		})
@@ -46,13 +49,29 @@ func (s *SourceResource) ListSources() http.HandlerFunc {
 			panic(err)
 		}
 
-		resultBytes, err := json.Marshal(result)
-		if err != nil {
-			panic(err)
+		result := make([]SourceEntry, len(dbResult))
+		for i, r := range dbResult {
+			period, err := r.Period.Value()
+			if err != nil {
+				panic(err)
+			}
+
+			result[i] = SourceEntry{
+				ID:            r.ID,
+				Name:          r.Name,
+				Url:           r.Url,
+				Period:        period.(string),
+				LastExecution: r.LastExecution.Time.Format(time.RFC3339),
+				Version:       r.Version.Int64,
+				Running:       r.Running.Bool,
+			}
 		}
 
 		resp.WriteHeader(200)
-		resp.Write(resultBytes)
+		err = Json(resp, result)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -62,19 +81,46 @@ func (s *SourceResource) ListSourcesNodes() http.HandlerFunc {
 		after := ParseIp(req.URL.Query().Get("after"))
 		limit := ParseIntDefault(req.URL.Query().Get("limit"), 10)
 
-		result, err := s.queries.ListSourcesNodes(req.Context(), database.ListSourcesNodesParams{
+		dbResult, err := s.queries.ListSourcesNodes(req.Context(), database.ListSourcesNodesParams{
 			IpAddr: after,
 			Limit:  limit,
 			ID:     sourceId,
 		})
-
 		if err != nil {
 			panic(err)
 		}
 
-		resultBytes, err := json.Marshal(result)
+		resultMap := make(map[string]*NodeEntry)
+		for _, r := range dbResult {
+			sourceEntry := NodeSourceEntry{
+				SourceId:      r.SourceID,
+				Version:       r.Version.Int64,
+				LastExecution: r.LastExecution.Time.Format(time.RFC3339),
+			}
+			if entry, ok := resultMap[r.IpAddr.String()]; ok {
+				entry.Sources = append(entry.Sources, sourceEntry)
+			} else {
+				resultMap[r.IpAddr.String()] = &NodeEntry{
+					IpAddr:  r.IpAddr.String(),
+					Sources: []NodeSourceEntry{sourceEntry},
+				}
+			}
+		}
+
+		result := make([]NodeEntry, 0, len(resultMap))
+		for _, v := range resultMap {
+			result = append(result, *v)
+		}
+
+		slices.SortFunc(result, func(a, b NodeEntry) int {
+			return strings.Compare(a.IpAddr, b.IpAddr)
+		})
+
 		resp.WriteHeader(200)
-		resp.Write(resultBytes)
+		err = Json(resp, result)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -95,7 +141,7 @@ func (s *SourceResource) CreateSource() http.HandlerFunc {
 		var period pgtype.Interval
 		period.Scan(input.Period)
 
-		source, err := s.queries.CreateSource(req.Context(), database.CreateSourceParams{
+		dbResult, err := s.queries.CreateSource(req.Context(), database.CreateSourceParams{
 			Name:   input.Name,
 			Url:    input.Url,
 			Period: period,
@@ -105,13 +151,22 @@ func (s *SourceResource) CreateSource() http.HandlerFunc {
 			panic(err)
 		}
 
-		sourceBytes, err := json.Marshal(source)
+		resultPeriod, err := dbResult.Period.Value()
 		if err != nil {
 			panic(err)
 		}
+		result := SourceEntry{
+			ID:            dbResult.ID,
+			Name:          dbResult.Name,
+			Url:           dbResult.Url,
+			Period:        resultPeriod.(string),
+			LastExecution: dbResult.LastExecution.Time.Format(time.RFC3339),
+			Version:       dbResult.Version.Int64,
+			Running:       dbResult.Running.Bool,
+		}
 
 		resp.WriteHeader(201)
-		_, err = resp.Write(sourceBytes)
+		err = Json(resp, result)
 		if err != nil {
 			panic(err)
 		}
