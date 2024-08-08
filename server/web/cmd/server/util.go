@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -10,6 +11,40 @@ import (
 
 	"github.com/go-chi/chi/v5/middleware"
 )
+
+type CursorExtractor[T any] func(item T) string
+
+func MakePaginated[T any](data []T, limit int, cursorExt CursorExtractor[T]) Paginated[T] {
+	total := len(data)
+	hasMore := total >= limit
+
+	cursor := ""
+	if total > 0 {
+		cursor = cursorExt(data[total-1])
+	}
+
+	return Paginated[T]{
+		Cursor:  cursor,
+		Total:   total,
+		HasMore: hasMore,
+		Data:    data,
+	}
+}
+
+func PaginatedContext(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
+		cursor := req.URL.Query().Get("after")
+		limit := ParseIntDefault(req.URL.Query().Get("limit"), 10)
+
+		ctx := req.Context()
+		ctx = context.WithValue(ctx, "pagination", PaginatedInput{
+			Cursor: cursor,
+			Limit:  limit,
+		})
+
+		next.ServeHTTP(resp, req.WithContext(ctx))
+	})
+}
 
 func AssertInt(val string) (int32, error) {
 	num, err := strconv.ParseInt(val, 10, 32)

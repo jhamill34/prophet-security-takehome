@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/netip"
 
@@ -28,7 +29,7 @@ func (a *AllowListResource) Path() string {
 
 func (a *AllowListResource) Handler() http.Handler {
 	r := chi.NewRouter()
-	r.Get("/", a.ListAllLists())
+	r.With(PaginatedContext).Get("/", a.ListAllLists())
 	r.Post("/", a.CreateAllowList())
 
 	r.Route("/{id}", func(r chi.Router) {
@@ -45,12 +46,12 @@ func (a *AllowListResource) Handler() http.Handler {
 
 func (a *AllowListResource) ListAllLists() http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
-		after := ParseIntDefault(req.URL.Query().Get("after"), -1)
-		limit := ParseIntDefault(req.URL.Query().Get("limit"), 10)
+		pagination := req.Context().Value("pagination").(PaginatedInput)
+		after := ParseIntDefault(pagination.Cursor, -1)
 
 		dbResult, err := a.queries.ListAllLists(req.Context(), database.ListAllListsParams{
 			ID:    after,
-			Limit: limit,
+			Limit: pagination.Limit,
 		})
 
 		if err != nil {
@@ -66,7 +67,11 @@ func (a *AllowListResource) ListAllLists() http.HandlerFunc {
 			}
 		}
 
-		Json(req, resp, result, 200)
+		paginated := MakePaginated(result, int(pagination.Limit), func(item AllowlistEntry) string {
+			return fmt.Sprintf("%d", item.ID)
+		})
+
+		Json(req, resp, paginated, 200)
 	}
 }
 

@@ -24,22 +24,23 @@ func (r *NodeResource) Path() string {
 
 func (n *NodeResource) Handler() http.Handler {
 	r := chi.NewRouter()
-	r.Get("/", n.ListFilteredNodes())
+	r.With(PaginatedContext).Get("/", n.ListFilteredNodes())
 	return r
 }
 
 func (n *NodeResource) ListFilteredNodes() http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
-		cursor := ParseIp(req.URL.Query().Get("after"))
+		pagination := req.Context().Value("pagination").(PaginatedInput)
+		cursor := ParseIp(pagination.Cursor)
+
 		allowListIdStr := req.URL.Query().Get("allowlistId")
-		limit := ParseIntDefault(req.URL.Query().Get("limit"), 10)
 		invert := req.URL.Query().Get("invert")
 
 		resultMap := make(map[string]*NodeEntry, 0)
 		if allowListIdStr == "" {
 			dbResult, err := n.queries.ListAllNodes(req.Context(), database.ListAllNodesParams{
 				IpAddr: cursor,
-				Limit:  limit,
+				Limit:  pagination.Limit,
 			})
 			if err != nil {
 				InternalServerError(req, resp, err)
@@ -71,7 +72,7 @@ func (n *NodeResource) ListFilteredNodes() http.HandlerFunc {
 			if invert != "true" {
 				dbResult, err := n.queries.ListNodesWithoutAllowlist(req.Context(), database.ListNodesWithoutAllowlistParams{
 					IpAddr: cursor,
-					Limit:  limit,
+					Limit:  pagination.Limit,
 					ListID: allowListId,
 				})
 				if err != nil {
@@ -97,7 +98,7 @@ func (n *NodeResource) ListFilteredNodes() http.HandlerFunc {
 			} else {
 				dbResult, err := n.queries.ListFilteredAllowlistNodes(req.Context(), database.ListFilteredAllowlistNodesParams{
 					IpAddr: cursor,
-					Limit:  limit,
+					Limit:  pagination.Limit,
 					ListID: allowListId,
 				})
 				if err != nil {
@@ -132,6 +133,10 @@ func (n *NodeResource) ListFilteredNodes() http.HandlerFunc {
 			return strings.Compare(a.IpAddr, b.IpAddr)
 		})
 
-		Json(req, resp, result, 200)
+		paginated := MakePaginated(result, int(pagination.Limit), func(node NodeEntry) string {
+			return node.IpAddr
+		})
+
+		Json(req, resp, paginated, 200)
 	}
 }

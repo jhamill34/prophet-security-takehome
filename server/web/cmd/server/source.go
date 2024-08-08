@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"slices"
 	"strings"
@@ -32,11 +33,11 @@ func (s *SourceResource) Path() string {
 func (s *SourceResource) Handler() http.Handler {
 	r := chi.NewRouter()
 	r.Post("/", s.CreateSource())
-	r.Get("/", s.ListSources())
+	r.With(PaginatedContext).Get("/", s.ListSources())
 
 	r.Route("/{id}", func(r chi.Router) {
 		r.Use(s.SourceContext)
-		r.Get("/", s.ListSourcesNodes())
+		r.With(PaginatedContext).Get("/", s.ListSourcesNodes())
 		r.Post("/start", s.StartSource())
 		r.Post("/stop", s.StopSource())
 	})
@@ -45,12 +46,12 @@ func (s *SourceResource) Handler() http.Handler {
 
 func (s *SourceResource) ListSources() http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
-		after := ParseIntDefault(req.URL.Query().Get("after"), -1)
-		limit := ParseIntDefault(req.URL.Query().Get("limit"), 10)
+		pagination := req.Context().Value("pagination").(PaginatedInput)
+		after := ParseIntDefault(pagination.Cursor, -1)
 
 		dbResult, err := s.queries.ListAllSources(req.Context(), database.ListAllSourcesParams{
 			ID:    after,
-			Limit: limit,
+			Limit: pagination.Limit,
 		})
 		if err != nil {
 			InternalServerError(req, resp, err)
@@ -76,7 +77,11 @@ func (s *SourceResource) ListSources() http.HandlerFunc {
 			}
 		}
 
-		Json(req, resp, result, 200)
+		paginated := MakePaginated(result, int(pagination.Limit), func(entry SourceEntry) string {
+			return fmt.Sprintf("%d", entry.ID)
+		})
+
+		Json(req, resp, paginated, 200)
 	}
 }
 
@@ -158,12 +163,12 @@ func (s *SourceResource) ListSourcesNodes() http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
 		source := req.Context().Value("source").(database.Source)
 
-		after := ParseIp(req.URL.Query().Get("after"))
-		limit := ParseIntDefault(req.URL.Query().Get("limit"), 10)
+		pagination := req.Context().Value("pagination").(PaginatedInput)
+		after := ParseIp(pagination.Cursor)
 
 		dbResult, err := s.queries.ListSourcesNodes(req.Context(), database.ListSourcesNodesParams{
 			IpAddr: after,
-			Limit:  limit,
+			Limit:  pagination.Limit,
 			ID:     source.ID,
 		})
 		if err != nil {
@@ -197,7 +202,11 @@ func (s *SourceResource) ListSourcesNodes() http.HandlerFunc {
 			return strings.Compare(a.IpAddr, b.IpAddr)
 		})
 
-		Json(req, resp, result, 200)
+		paginated := MakePaginated(result, int(pagination.Limit), func(entry NodeEntry) string {
+			return entry.IpAddr
+		})
+
+		Json(req, resp, paginated, 200)
 	}
 }
 

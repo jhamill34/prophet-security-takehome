@@ -1,9 +1,15 @@
 package main
 
+type PaginatedInput struct {
+	Cursor string
+	Limit  int32
+}
+
 type Paginated[T any] struct {
-	Cursor string `json:"cursor"`
-	Total  uint   `json:"total"`
-	Data   []T    `json:"data"`
+	Cursor  string `json:"cursor"`
+	Total   int    `json:"total"`
+	HasMore bool   `json:"has_more"`
+	Data    []T    `json:"data"`
 }
 
 type NodeEntry struct {
