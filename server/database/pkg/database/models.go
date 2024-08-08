@@ -8,6 +8,17 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Allowlist struct {
+	ID   int32
+	Name string
+}
+
+type AllowlistEntry struct {
+	ID     int32
+	IpAddr string
+	ListID int32
+}
+
 type Node struct {
 	ID       int32
 	IpAddr   string

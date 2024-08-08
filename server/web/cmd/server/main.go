@@ -21,6 +21,7 @@ func main() {
 		RootRouter(
 			NewNodeResource(queries),
 			NewSourceResource(queries),
+			NewAllowListResource(queries),
 		),
 	)
 

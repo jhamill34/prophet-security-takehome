@@ -1,6 +1,5 @@
 -- name: ListAllExistingNodes :many
-SELECT DISTINCT 
-    n.ip_addr
+SELECT DISTINCT n.ip_addr
 FROM nodes n
 INNER JOIN sources s ON s.id = n.source_id
 WHERE s.version < n.version and (n.ip_addr > $1)

@@ -13,13 +13,6 @@ import (
 	"github.com/jhamill34/prophet-security-takehome/server/database/pkg/database"
 )
 
-//
-// One service polls for existing ingestion configurations
-// and schedules the ingestion based on the state we read
-//
-// Another service polls for active jobs
-//
-
 func main() {
 	db := NewDatabase(context.TODO(), "host=localhost port=5432 user=prophet-th password=prophet-th dbname=prophet-th sslmode=disable")
 	queries := database.New(db)
@@ -54,6 +47,11 @@ func (i *Ingester) Run(ctx context.Context) {
 
 		for _, s := range sources {
 			childCtx := context.WithValue(ctx, "job_name", s.Name)
+			slog.InfoContext(ctx, "Bumping source version")
+			s, err := i.queries.PrepareExecution(ctx, s.Name)
+			if err != nil {
+				panic(err)
+			}
 			i.doIngestion(childCtx, s)
 		}
 
@@ -67,12 +65,6 @@ func (i *Ingester) idle() {
 }
 
 func (i *Ingester) doIngestion(ctx context.Context, source database.Source) {
-	slog.InfoContext(ctx, "Bumping source version")
-	source, err := i.queries.PrepareExecution(ctx, source.Name)
-	if err != nil {
-		panic(err)
-	}
-
 	slog.InfoContext(ctx, "Fetching canonical data")
 	req, err := http.NewRequestWithContext(ctx, "GET", source.Url, nil)
 	if err != nil {
