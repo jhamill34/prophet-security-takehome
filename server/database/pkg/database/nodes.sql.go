@@ -53,7 +53,7 @@ INNER JOIN sources s ON s.id = n.source_id
 WHERE 1=1
 AND s.version < n.version 
 AND n.ip_addr > $1
-AND NOT n.ip_addr <<= ANY (
+AND n.ip_addr <<= ANY (
     SELECT a.ip_addr
     FROM allowlist_entry a 
     WHERE 1=1 
@@ -71,6 +71,49 @@ type ListFilteredAllowlistNodesParams struct {
 
 func (q *Queries) ListFilteredAllowlistNodes(ctx context.Context, arg ListFilteredAllowlistNodesParams) ([]netip.Addr, error) {
 	rows, err := q.db.Query(ctx, listFilteredAllowlistNodes, arg.IpAddr, arg.Limit, arg.ListID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []netip.Addr
+	for rows.Next() {
+		var ip_addr netip.Addr
+		if err := rows.Scan(&ip_addr); err != nil {
+			return nil, err
+		}
+		items = append(items, ip_addr)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listNodesWithoutAllowlist = `-- name: ListNodesWithoutAllowlist :many
+SELECT DISTINCT n.ip_addr
+FROM nodes n
+INNER JOIN sources s ON s.id = n.source_id
+WHERE 1=1
+AND s.version < n.version 
+AND n.ip_addr > $1
+AND NOT n.ip_addr <<= ANY (
+    SELECT a.ip_addr
+    FROM allowlist_entry a 
+    WHERE 1=1 
+    AND a.list_id = $3
+)
+ORDER BY n.ip_addr
+LIMIT $2
+`
+
+type ListNodesWithoutAllowlistParams struct {
+	IpAddr netip.Addr
+	Limit  int32
+	ListID int32
+}
+
+func (q *Queries) ListNodesWithoutAllowlist(ctx context.Context, arg ListNodesWithoutAllowlistParams) ([]netip.Addr, error) {
+	rows, err := q.db.Query(ctx, listNodesWithoutAllowlist, arg.IpAddr, arg.Limit, arg.ListID)
 	if err != nil {
 		return nil, err
 	}

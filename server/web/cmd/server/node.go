@@ -34,6 +34,7 @@ func (n *NodeResource) ListFilteredNodes() http.HandlerFunc {
 		cursor := ParseIp(req.URL.Query().Get("after"))
 		allowListIdStr := req.URL.Query().Get("allowlistId")
 		limit := ParseIntDefault(req.URL.Query().Get("limit"), 10)
+		invert := req.URL.Query().Get("invert")
 
 		var result []netip.Addr
 		if allowListIdStr == "" {
@@ -46,11 +47,19 @@ func (n *NodeResource) ListFilteredNodes() http.HandlerFunc {
 			}
 		} else {
 			allowListId := AssertInt(allowListIdStr)
-			result, err = n.queries.ListFilteredAllowlistNodes(req.Context(), database.ListFilteredAllowlistNodesParams{
-				IpAddr: cursor,
-				Limit:  limit,
-				ListID: allowListId,
-			})
+			if invert != "true" {
+				result, err = n.queries.ListNodesWithoutAllowlist(req.Context(), database.ListNodesWithoutAllowlistParams{
+					IpAddr: cursor,
+					Limit:  limit,
+					ListID: allowListId,
+				})
+			} else {
+				result, err = n.queries.ListFilteredAllowlistNodes(req.Context(), database.ListFilteredAllowlistNodesParams{
+					IpAddr: cursor,
+					Limit:  limit,
+					ListID: allowListId,
+				})
+			}
 
 			if err != nil {
 				panic(err)
