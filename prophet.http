@@ -44,7 +44,7 @@ GET http://localhost:3333/allowlist/2/entry
 POST http://localhost:3333/allowlist/2/entry
 
 {
-    "ip_addr": "127.0.0.0/8"
+    "cidr": "127.0.0.0/8"
 }
 
 # Remove an IP from an allowlist

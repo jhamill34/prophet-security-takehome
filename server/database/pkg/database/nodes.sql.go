@@ -68,7 +68,7 @@ WHERE 1=1
 AND s.version < n.version 
 AND n.ip_addr > $1
 AND n.ip_addr <<= ANY (
-    SELECT a.ip_addr
+    SELECT a.cidr
     FROM allowlist_entry a 
     WHERE 1=1 
     AND a.list_id = $3
@@ -123,7 +123,7 @@ WHERE 1=1
 AND s.version < n.version 
 AND n.ip_addr > $1
 AND NOT n.ip_addr <<= ANY (
-    SELECT a.ip_addr
+    SELECT a.cidr
     FROM allowlist_entry a 
     WHERE 1=1 
     AND a.list_id = $3

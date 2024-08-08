@@ -17,7 +17,7 @@ type Allowlist struct {
 
 type AllowlistEntry struct {
 	ID     int32
-	IpAddr netip.Prefix
+	Cidr   netip.Prefix
 	ListID int32
 }
 

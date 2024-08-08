@@ -1,5 +1,11 @@
 package main
 
+type Paginated[T any] struct {
+	Cursor string `json:"cursor"`
+	Total  uint   `json:"total"`
+	Data   []T    `json:"data"`
+}
+
 type NodeEntry struct {
 	IpAddr  string            `json:"ip_addr"`
 	Sources []NodeSourceEntry `json:"sources"`

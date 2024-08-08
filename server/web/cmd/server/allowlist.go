@@ -81,7 +81,7 @@ func (a *AllowListResource) ListAllowList() http.HandlerFunc {
 		for i, r := range dbResult {
 			entries[i] = AllowlistEntryItem{
 				ID:     r.ID,
-				Cidr:   r.IpAddr.String(),
+				Cidr:   r.Cidr.String(),
 				ListID: r.ListID,
 			}
 		}
@@ -137,7 +137,7 @@ func (a *AllowListResource) DeleteAllowList() http.HandlerFunc {
 }
 
 type ListEntryInput struct {
-	IpAddr string `json:"ip_addr"`
+	Cidr string `json:"cidr"`
 }
 
 func (a *AllowListResource) AddToList() http.HandlerFunc {
@@ -147,13 +147,13 @@ func (a *AllowListResource) AddToList() http.HandlerFunc {
 		var input ListEntryInput
 		json.NewDecoder(req.Body).Decode(&input)
 
-		ipAddr, err := netip.ParsePrefix(input.IpAddr)
+		ipAddr, err := netip.ParsePrefix(input.Cidr)
 		if err != nil {
 			panic(err)
 		}
 
 		dbResult, err := a.queries.AddToAllowlist(req.Context(), database.AddToAllowlistParams{
-			IpAddr: ipAddr,
+			Cidr:   ipAddr,
 			ListID: listId,
 		})
 		if err != nil {
@@ -162,7 +162,7 @@ func (a *AllowListResource) AddToList() http.HandlerFunc {
 
 		entry := AllowlistEntryItem{
 			ID:     dbResult.ID,
-			Cidr:   dbResult.IpAddr.String(),
+			Cidr:   dbResult.Cidr.String(),
 			ListID: dbResult.ListID,
 		}
 

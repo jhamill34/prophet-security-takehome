@@ -11,22 +11,22 @@ import (
 )
 
 const addToAllowlist = `-- name: AddToAllowlist :one
-INSERT INTO allowlist_entry (ip_addr, list_id) 
+INSERT INTO allowlist_entry (cidr, list_id) 
 VALUES ($1, $2)
-ON CONFLICT (ip_addr, list_id) 
+ON CONFLICT (cidr, list_id) 
 DO NOTHING
-RETURNING id, ip_addr, list_id
+RETURNING id, cidr, list_id
 `
 
 type AddToAllowlistParams struct {
-	IpAddr netip.Prefix
+	Cidr   netip.Prefix
 	ListID int32
 }
 
 func (q *Queries) AddToAllowlist(ctx context.Context, arg AddToAllowlistParams) (AllowlistEntry, error) {
-	row := q.db.QueryRow(ctx, addToAllowlist, arg.IpAddr, arg.ListID)
+	row := q.db.QueryRow(ctx, addToAllowlist, arg.Cidr, arg.ListID)
 	var i AllowlistEntry
-	err := row.Scan(&i.ID, &i.IpAddr, &i.ListID)
+	err := row.Scan(&i.ID, &i.Cidr, &i.ListID)
 	return i, err
 }
 
@@ -88,11 +88,11 @@ func (q *Queries) ListAllLists(ctx context.Context, arg ListAllListsParams) ([]A
 }
 
 const listEntriesForAllowList = `-- name: ListEntriesForAllowList :many
-SELECT id, ip_addr, list_id
+SELECT id, cidr, list_id
 FROM allowlist_entry 
 WHERE 1=1
 AND list_id = $1
-ORDER BY ip_addr
+ORDER BY cidr
 `
 
 func (q *Queries) ListEntriesForAllowList(ctx context.Context, listID int32) ([]AllowlistEntry, error) {
@@ -104,7 +104,7 @@ func (q *Queries) ListEntriesForAllowList(ctx context.Context, listID int32) ([]
 	var items []AllowlistEntry
 	for rows.Next() {
 		var i AllowlistEntry
-		if err := rows.Scan(&i.ID, &i.IpAddr, &i.ListID); err != nil {
+		if err := rows.Scan(&i.ID, &i.Cidr, &i.ListID); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

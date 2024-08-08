@@ -11,7 +11,7 @@ SELECT *
 FROM allowlist_entry 
 WHERE 1=1
 AND list_id = $1
-ORDER BY ip_addr;
+ORDER BY cidr;
 
 -- name: CreateAllowList :one
 INSERT INTO allowlist (name)
@@ -23,9 +23,9 @@ DELETE FROM allowlist
 WHERE id = $1;
 
 -- name: AddToAllowlist :one
-INSERT INTO allowlist_entry (ip_addr, list_id) 
+INSERT INTO allowlist_entry (cidr, list_id) 
 VALUES ($1, $2)
-ON CONFLICT (ip_addr, list_id) 
+ON CONFLICT (cidr, list_id) 
 DO NOTHING
 RETURNING *;
 
