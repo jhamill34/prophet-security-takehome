@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"io"
+	"net/http"
 	"net/netip"
 	"strconv"
 )
@@ -42,7 +42,9 @@ func ParseIp(val string) netip.Addr {
 	return addr
 }
 
-func Json(w io.Writer, val any) error {
+func Json(w http.ResponseWriter, val any, status int) error {
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(status)
 	encoder := json.NewEncoder(w)
 	encoder.SetIndent("", " ")
 	return encoder.Encode(val)

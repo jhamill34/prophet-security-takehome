@@ -38,17 +38,17 @@ Content-Type: application/json
 DELETE http://localhost:3333/allowlist/1
 
 # List IPs in an allowlist
-GET http://localhost:3333/allowlist/2/entry
+GET http://localhost:3333/allowlist/1/entry
 
 # Add an IP to an allowlist
-POST http://localhost:3333/allowlist/2/entry
+POST http://localhost:3333/allowlist/1/entry
 
 {
-    "cidr": "127.0.0.0/8"
+    "cidr": "10.0.0.0/16"
 }
 
 # Remove an IP from an allowlist
-DELETE http://localhost:3333/allowlist/2/entry/3
+DELETE http://localhost:3333/allowlist/1/entry/3
 
 
 ##################################################

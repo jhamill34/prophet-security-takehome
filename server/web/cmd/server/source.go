@@ -67,8 +67,7 @@ func (s *SourceResource) ListSources() http.HandlerFunc {
 			}
 		}
 
-		resp.WriteHeader(200)
-		err = Json(resp, result)
+		err = Json(resp, result, 200)
 		if err != nil {
 			panic(err)
 		}
@@ -116,8 +115,7 @@ func (s *SourceResource) ListSourcesNodes() http.HandlerFunc {
 			return strings.Compare(a.IpAddr, b.IpAddr)
 		})
 
-		resp.WriteHeader(200)
-		err = Json(resp, result)
+		err = Json(resp, result, 200)
 		if err != nil {
 			panic(err)
 		}
@@ -165,8 +163,7 @@ func (s *SourceResource) CreateSource() http.HandlerFunc {
 			Running:       dbResult.Running.Bool,
 		}
 
-		resp.WriteHeader(201)
-		err = Json(resp, result)
+		err = Json(resp, result, 201)
 		if err != nil {
 			panic(err)
 		}

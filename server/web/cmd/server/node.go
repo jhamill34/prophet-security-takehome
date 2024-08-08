@@ -124,8 +124,7 @@ func (n *NodeResource) ListFilteredNodes() http.HandlerFunc {
 			return strings.Compare(a.IpAddr, b.IpAddr)
 		})
 
-		resp.WriteHeader(200)
-		err := Json(resp, result)
+		err := Json(resp, result, 200)
 		if err != nil {
 			panic(err)
 		}

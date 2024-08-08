@@ -59,8 +59,7 @@ func (a *AllowListResource) ListAllLists() http.HandlerFunc {
 			}
 		}
 
-		resp.WriteHeader(200)
-		err = Json(resp, result)
+		err = Json(resp, result, 200)
 		if err != nil {
 			panic(err)
 		}
@@ -86,8 +85,7 @@ func (a *AllowListResource) ListAllowList() http.HandlerFunc {
 			}
 		}
 
-		resp.WriteHeader(200)
-		err = Json(resp, entries)
+		err = Json(resp, entries, 200)
 		if err != nil {
 			panic(err)
 		}
@@ -112,8 +110,10 @@ func (a *AllowListResource) CreateAllowList() http.HandlerFunc {
 			Name: dbResult.Name,
 		}
 
-		resp.WriteHeader(201)
-		err = Json(resp, entry)
+		err = Json(resp, entry, 201)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -166,8 +166,7 @@ func (a *AllowListResource) AddToList() http.HandlerFunc {
 			ListID: dbResult.ListID,
 		}
 
-		resp.WriteHeader(201)
-		err = Json(resp, entry)
+		err = Json(resp, entry, 201)
 		if err != nil {
 			panic(err)
 		}

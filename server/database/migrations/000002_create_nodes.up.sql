@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS nodes (
     id  SERIAL PRIMARY KEY,
     ip_addr INET NOT NULL,
-    source_id INT NOT NULL,
+    source_id INT NOT NULL REFERENCES sources(id) ON DELETE CASCADE,
     version BIGINT DEFAULT 0
 );
 
