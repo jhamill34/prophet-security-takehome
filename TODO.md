@@ -1,7 +1,0 @@
-- [ ] OpenAPI documentation
-- [ ] User auth (tokens)
-- [ ] User roles 
-- [ ] Front end
-- [x] Review data validation 
-- [x] Error cases
-- [x] Foreign key constraints

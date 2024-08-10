@@ -6,16 +6,13 @@
 GET http://localhost:3333/nodes
 
 # List aggregated nodes with applied allowlist
-GET http://localhost:3333/nodes?allowlistId=2
+GET http://localhost:3333/nodes?allowlistId=1
 
 # List aggregated nodes with applied allowlist inverted
-GET http://localhost:3333/nodes?allowlistId=2&invert=true
+GET http://localhost:3333/nodes?allowlistId=1&invert=true
 
 # List Nodes for a source 
 GET http://localhost:3333/sources/1
-
-# List Nodes for another source
-GET http://localhost:3333/sources/2
 
 
 ##################################################
@@ -38,17 +35,18 @@ Content-Type: application/json
 DELETE http://localhost:3333/allowlist/1
 
 # List IPs in an allowlist
-GET http://localhost:3333/allowlist/2/entry
+GET http://localhost:3333/allowlist/1/entry
 
 # Add an IP to an allowlist
-POST http://localhost:3333/allowlist/2/entry
+POST http://localhost:3333/allowlist/1/entry
+Content-Type: application/json
 
 {
-    "cidr": "10.0.0.0/16"
+    "cidr": "2.58.0.0/16"
 }
 
 # Remove an IP from an allowlist
-DELETE http://localhost:3333/allowlist/1/entry/3
+DELETE http://localhost:3333/allowlist/1/entry/1
 
 
 ##################################################
@@ -58,36 +56,41 @@ DELETE http://localhost:3333/allowlist/1/entry/3
 # List Sources
 GET http://localhost:3333/sources
 
-# Create a Source 1 (runs every 30 seconds)
+# Create the udger source to run every minute
 POST http://localhost:3333/sources
 Content-Type: application/json
 
 {
-    "name": "source_1",
+    "name": "udger",
+    "url": "https://raw.githubusercontent.com/udger/test-data/master/CSV_data_example/tor_exit_node.csv",
+    "period": "00:01:00"
+}
+
+# Create the dan.me.uk source to run every 30 minutes
+POST http://localhost:3333/sources
+Content-Type: application/json
+
+{
+    "name": "dan.me.uk",
+    "url": "https://www.dan.me.uk/torlist/?exit",
+    "period": "00:30:00"
+}
+
+# Create the dan.me.uk source to run every 30 seconds
+POST http://localhost:3333/sources
+Content-Type: application/json
+
+{
+    "name": "mock",
     "url": "http://localhost:3334/data1.csv",
     "period": "00:00:30"
 }
 
-# Create a Source 2 (runs every minute)
-POST http://localhost:3333/sources
-Content-Type: application/json
-
-{
-    "name": "source_2",
-    "url": "http://localhost:3334/data2.csv",
-    "period": "00:01:00"
-}
-
-# Stop Source 1
+# Stop a Source
 POST http://localhost:3333/sources/1/stop
 
-# Stop Source 2
-POST http://localhost:3333/sources/2/stop
-
-# Start Source 1
+# Start a Source 
 POST http://localhost:3333/sources/1/start
 
-# Start Source 2
-POST http://localhost:3333/sources/2/start
 
 
