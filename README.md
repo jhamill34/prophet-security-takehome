@@ -62,7 +62,10 @@ go run ./server/web/cmd/server
 
 For a list of all operations that the api server can do, reference the [OpenAPI specficiation](./server/api/openapi.yaml).
 
-For a list of example requests look at the [prophet.http](./prophet.http) file.
+For a list of example requests look at the [prophet.http](./prophet.http) file. 
+
+> I use Nvim as my editor and I have a plugin called [rest.nvim](https://github.com/rest-nvim/rest.nvim) that I use to make the requests
+> found in that file in my editor. 
 
 ### Optional Mock Source Server
 
