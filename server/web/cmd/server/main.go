@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log/slog"
+	"net/http"
 
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/go-chi/chi/v5"
@@ -34,13 +35,23 @@ func main() {
 	})
 
 	router := chi.NewRouter()
-	router.Use(middleware.RequestID)
-	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
+	router.Use(middleware.RequestID)
+	router.Use(RequestIdInResponseMiddleware)
+	router.Use(middleware.Logger)
 	router.Use(validator)
 
-	// TODO: Custom error functions
-	serverRoutes := api.NewStrictHandler(routes.NewServerRoutes(queries), []api.StrictMiddlewareFunc{})
+	serverRoutes := api.NewStrictHandlerWithOptions(routes.NewServerRoutes(queries), []api.StrictMiddlewareFunc{}, api.StrictHTTPServerOptions{
+		ResponseErrorHandlerFunc: func(w http.ResponseWriter, r *http.Request, err error) {
+			reqId := middleware.GetReqID(r.Context())
+			slog.Error(
+				"Internal Server Error",
+				slog.String("internal_error", err.Error()),
+				slog.String("request_id", reqId),
+			)
+			http.Error(w, "Internal Server Error", 500)
+		},
+	})
 
 	handler := api.HandlerWithOptions(serverRoutes, api.ChiServerOptions{
 		BaseRouter: router,
@@ -50,4 +61,12 @@ func main() {
 
 	slog.Info("Starting server")
 	s.ListenAndServe()
+}
+
+func RequestIdInResponseMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		reqId := middleware.GetReqID(r.Context())
+		w.Header().Add("X-Request-Id", reqId)
+		next.ServeHTTP(w, r)
+	})
 }

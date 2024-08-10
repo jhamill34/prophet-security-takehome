@@ -2,6 +2,7 @@ package routes
 
 import (
 	"context"
+	"errors"
 	"slices"
 	"strings"
 	"time"
@@ -19,6 +20,8 @@ func (s *ServerRoutes) ListAggregatedNodes(ctx context.Context, request api.List
 	if err != nil {
 		return api.ListAggregatedNodes400TextResponse(err.Error()), nil
 	}
+
+	return nil, errors.New("This is a new error!")
 
 	if request.Params.AllowlistId == nil {
 		dbResult, err := s.queries.ListAllNodes(ctx, database.ListAllNodesParams{
