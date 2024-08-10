@@ -8,6 +8,7 @@ import (
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/httplog/v2"
 	"github.com/jhamill34/prophet-security-takehome/server/api/pkg/api"
 	"github.com/jhamill34/prophet-security-takehome/server/database/pkg/database"
 	"github.com/jhamill34/prophet-security-takehome/server/web/internal/auth"
@@ -34,22 +35,33 @@ func main() {
 		SilenceServersWarning: true,
 	})
 
+	logger := httplog.NewLogger(swagger.Info.Title, httplog.Options{
+		LogLevel:         slog.LevelDebug,
+		JSON:             false,
+		Concise:          false,
+		RequestHeaders:   true,
+		MessageFieldName: "message",
+		Tags: map[string]string{
+			"version": swagger.Info.Version,
+			"env":     "development",
+		},
+	})
+
 	router := chi.NewRouter()
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.RequestID)
 	router.Use(RequestIdInResponseMiddleware)
-	router.Use(middleware.Logger)
+	router.Use(httplog.RequestLogger(logger))
 	router.Use(validator)
 
 	serverRoutes := api.NewStrictHandlerWithOptions(routes.NewServerRoutes(queries), []api.StrictMiddlewareFunc{}, api.StrictHTTPServerOptions{
 		ResponseErrorHandlerFunc: func(w http.ResponseWriter, r *http.Request, err error) {
-			reqId := middleware.GetReqID(r.Context())
-			slog.Error(
+			oplog := httplog.LogEntry(r.Context())
+			oplog.Error(
 				"Internal Server Error",
 				slog.String("internal_error", err.Error()),
-				slog.String("request_id", reqId),
 			)
-			http.Error(w, "Internal Server Error", 500)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		},
 	})
 
@@ -59,7 +71,7 @@ func main() {
 
 	s := server.NewHttpServer(3333, handler)
 
-	slog.Info("Starting server")
+	logger.Logger.Info("Starting Server")
 	s.ListenAndServe()
 }
 
