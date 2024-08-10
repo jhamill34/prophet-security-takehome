@@ -1,8 +1,10 @@
 go 1.22.5
 
 use (
+	./server/api
 	./server/database
 	./server/ingest
 	./server/mock
 	./server/web
+	./server/web_old
 )

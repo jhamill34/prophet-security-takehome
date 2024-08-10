@@ -1,0 +1,463 @@
+openapi: 3.0.0
+info: 
+  title: "Prophet Security Takehome Api"
+  version: 0.1.0
+servers:
+  - url: http://localhost:3333
+tags:
+  - name: node
+  - name: allowlist
+  - name: sources
+
+paths: 
+  /nodes:
+    get: 
+      operationId: listAggregatedNodes
+      summary: ""
+      description: ""
+      parameters: 
+        - name: allowlistId
+          description: ""
+          in: query
+          required: false
+          schema: 
+            type: integer
+        - name: invert
+          description: ""
+          in: query
+          required: false
+          schema: 
+            type: boolean
+        - name: after
+          description: ""
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          description: ""
+          in: query
+          required: false
+          schema:
+            type: integer
+
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedNodeEntry'
+
+      tags: 
+        - node
+
+  /allowlist:
+    get:
+      operationId: listAllAllowlists
+      summary: ""
+      description: ""
+      parameters: 
+        - name: after
+          description: ""
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          description: ""
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses: 
+        200:
+          description: ""
+          content: 
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/PaginatedAllowlistEntry'
+
+      tags: 
+        - allowlist
+    post:
+      operationId: createAllowlist
+      summary: ""
+      description: ""
+      requestBody:
+        description: ""
+        required: true
+        content: 
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAllowlistInput'
+      responses:
+        201:
+          description: ""
+          content: 
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/AllowlistEntry'
+      tags: 
+        - allowlist
+
+  /allowlist/{id}:
+    parameters:
+      - name: id
+        description: ""
+        in: path
+        required: true
+        schema:
+          type: integer
+    delete:
+      operationId: deleteAllowList
+      summary: ""
+      description: ""
+      responses:
+        204:
+          description: ""
+      tags: 
+        - allowlist
+
+  /allowlist/{id}/entry:
+    parameters:
+      - name: id
+        description: ""
+        in: path
+        required: true
+        schema:
+          type: integer
+    get: 
+      operationId: listAllowlistEntries
+      summary: ""
+      description: ""
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AllowlistEntryItem'
+      tags: 
+        - allowlist
+
+    post:
+      operationId: addToAllowlist
+      summary: ""
+      description: ""
+      requestBody:
+        description: ""
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddAllowlistEntryInput'
+      responses:
+        201:
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AllowlistEntryItem'
+      tags: 
+        - allowlist
+
+  /allowlist/{id}/entry/{entryId}:
+    parameters:
+      - name: id
+        description: ""
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: entryId
+        description: ""
+        in: path
+        required: true
+        schema:
+          type: integer
+    delete:
+      operationId: removeFromAllowlist
+      summary: ""
+      description: ""
+      responses:
+        204:
+          description: ""
+      tags: 
+        - allowlist
+
+  /sources:
+    get:
+      operationId: listSources
+      summary: ""
+      description: ""
+      parameters:
+        - name: after
+          description: ""
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          description: ""
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        200:
+          description: ""
+          content: 
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedSourceEntry'
+
+      tags:
+        - sources
+
+    post:
+      operationId: createSource
+      summary: ""
+      description: ""
+      requestBody:
+        description: ""
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSourceEntryInput'
+      responses:
+        201:
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SourceEntry'
+      tags:
+        - sources
+
+  /sources/{id}:
+    parameters:
+      - name: id
+        description: ""
+        in: path
+        required: true
+        schema: 
+          type: integer
+    get:
+      operationId: listSourceNodes
+      summary: ""
+      description: ""
+      parameters:
+        - name: after
+          description: ""
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          description: ""
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedNodeEntry'
+      tags:
+        - sources
+
+  /sources/{id}/stop:
+    parameters:
+      - name: id
+        description: ""
+        in: path
+        required: true
+        schema: 
+          type: integer
+    post: 
+      operationId: stopSource
+      summary: ""
+      description: ""
+      responses:
+        204:
+          description: ""
+      tags:
+        - sources
+
+  /sources/{id}/start:
+    parameters:
+      - name: id
+        description: ""
+        in: path
+        required: true
+        schema: 
+          type: integer
+
+    post: 
+      operationId: startSource 
+      summary: ""
+      description: ""
+      responses:
+        204:
+          description: ""
+      tags:
+        - sources
+
+components:
+  schemas:
+    PaginatedMetadata: 
+      type: object
+      additionalProperties: false
+      required: [cursor, total, has_more]
+      properties: 
+        cursor: 
+          type: string
+        total:
+          type: integer
+        has_more: 
+          type: boolean
+
+    PaginatedNodeEntry:
+      allOf:
+        - $ref: '#/components/schemas/PaginatedMetadata'
+        - type: object
+          additionalProperties: false
+          required: [data]
+          properties:
+            data: 
+              type: array
+              items:
+                $ref: '#/components/schemas/NodeEntry'
+
+    NodeEntry: 
+      type: object
+      additionalProperties: false
+      required: [ ip_addr, sources ]
+      properties:
+        ip_addr: 
+          type: string
+        sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/NodeSourceEntry'
+
+    NodeSourceEntry:
+      type: object
+      additionalProperties: false
+      required: [ source_id, version, last_execution ]
+      properties:
+        source_id: 
+          type: integer
+        version: 
+          type: integer
+        last_execution: 
+          type: string
+
+    PaginatedAllowlistEntry:
+      allOf:
+        - $ref: '#/components/schemas/PaginatedMetadata'
+        - type: object
+          additionalProperties: false
+          required: [data]
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/AllowlistEntry'
+
+    CreateAllowlistInput:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name: 
+          type: string
+
+    AllowlistEntry:
+      type: object
+      additionalProperties: false
+      required: [id, name]
+      properties:
+        id:
+          type: integer
+        name: 
+          type: string
+
+    AddAllowlistEntryInput:
+      type: object
+      additionalProperties: false
+      required: [cidr]
+      properties:
+        cidr:
+          type: string
+
+    AllowlistEntryItem:
+      type: object
+      additionalProperties: false
+      required: [id, cidr, allowlist_id]
+      properties:
+        id:
+          type: integer
+        cidr: 
+          type: string
+        allowlist_id:
+          type: integer
+
+    CreateSourceEntryInput:
+      type: object
+      additionalProperties: false
+      required: [name, url, period]
+      properties:
+        name:
+          type: string
+        url:
+          type: string
+        period:
+          type: string
+
+    PaginatedSourceEntry:
+      allOf:
+        - $ref: '#/components/schemas/PaginatedMetadata'
+        - type: object
+          additionalProperties: false
+          required: [data]
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/SourceEntry'
+
+    SourceEntry:
+      type: object
+      additionalProperties: false
+      required: [id, name, url, period, last_execution, version, running]
+      properties:
+        id: 
+          type: integer
+        name:
+          type: string
+        url: 
+          type: string
+        period:
+          type: string
+        last_execution:
+          type: string
+        version: 
+          type: integer
+        running:
+          type: boolean
+
+  securitySchemes:
+    apiKey: 
+      type: apiKey
+      name: X-Api-Key
+      in: header
+
+
