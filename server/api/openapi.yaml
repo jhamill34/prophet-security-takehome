@@ -42,12 +42,18 @@ paths:
             type: integer
 
       responses:
-        200:
+        "200":
           description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginatedNodeEntry'
+        "400":
+          description: ""
+          content:
+            text/plain:
+              schema:
+                type: string
 
       tags: 
         - node
@@ -71,12 +77,19 @@ paths:
           schema:
             type: integer
       responses: 
-        200:
+        "200":
           description: ""
           content: 
             application/json:
               schema: 
                 $ref: '#/components/schemas/PaginatedAllowlistEntry'
+        "400":
+          description: ""
+          content:
+            text/plain:
+              schema:
+                type: string
+
 
       tags: 
         - allowlist
@@ -92,12 +105,18 @@ paths:
             schema:
               $ref: '#/components/schemas/CreateAllowlistInput'
       responses:
-        201:
+        "201":
           description: ""
           content: 
             application/json:
               schema: 
                 $ref: '#/components/schemas/AllowlistEntry'
+        "400":
+          description: ""
+          content:
+            text/plain:
+              schema:
+                type: string
       tags: 
         - allowlist
 
@@ -114,8 +133,20 @@ paths:
       summary: ""
       description: ""
       responses:
-        204:
+        "204":
           description: ""
+        "400":
+          description: ""
+          content:
+            text/plain:
+              schema:
+                type: string
+        "404":
+          description: ""
+          content:
+            text/plain:
+              schema:
+                type: string
       tags: 
         - allowlist
 
@@ -132,7 +163,7 @@ paths:
       summary: ""
       description: ""
       responses:
-        200:
+        "200":
           description: ""
           content:
             application/json:
@@ -140,6 +171,18 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/AllowlistEntryItem'
+        "400":
+          description: ""
+          content:
+            text/plain:
+              schema:
+                type: string
+        "404":
+          description: ""
+          content:
+            text/plain:
+              schema:
+                type: string
       tags: 
         - allowlist
 
@@ -155,12 +198,24 @@ paths:
             schema:
               $ref: '#/components/schemas/AddAllowlistEntryInput'
       responses:
-        201:
+        "201":
           description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AllowlistEntryItem'
+        "400":
+          description: ""
+          content:
+            text/plain:
+              schema:
+                type: string
+        "404":
+          description: ""
+          content:
+            text/plain:
+              schema:
+                type: string
       tags: 
         - allowlist
 
@@ -183,8 +238,20 @@ paths:
       summary: ""
       description: ""
       responses:
-        204:
+        "204":
           description: ""
+        "400":
+          description: ""
+          content:
+            text/plain:
+              schema:
+                type: string
+        "404":
+          description: ""
+          content:
+            text/plain:
+              schema:
+                type: string
       tags: 
         - allowlist
 
@@ -207,12 +274,18 @@ paths:
           schema:
             type: integer
       responses:
-        200:
+        "200":
           description: ""
           content: 
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginatedSourceEntry'
+        "400":
+          description: ""
+          content:
+            text/plain:
+              schema:
+                type: string
 
       tags:
         - sources
@@ -229,12 +302,18 @@ paths:
             schema:
               $ref: '#/components/schemas/CreateSourceEntryInput'
       responses:
-        201:
+        "201":
           description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/SourceEntry'
+        "400":
+          description: ""
+          content:
+            text/plain:
+              schema:
+                type: string
       tags:
         - sources
 
@@ -264,12 +343,24 @@ paths:
           schema:
             type: integer
       responses:
-        200:
+        "200":
           description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginatedNodeEntry'
+        "400":
+          description: ""
+          content:
+            text/plain:
+              schema:
+                type: string
+        "404":
+          description: ""
+          content:
+            text/plain:
+              schema:
+                type: string
       tags:
         - sources
 
@@ -286,8 +377,20 @@ paths:
       summary: ""
       description: ""
       responses:
-        204:
+        "204":
           description: ""
+        "400":
+          description: ""
+          content:
+            text/plain:
+              schema:
+                type: string
+        "404":
+          description: ""
+          content:
+            text/plain:
+              schema:
+                type: string
       tags:
         - sources
 
@@ -305,8 +408,20 @@ paths:
       summary: ""
       description: ""
       responses:
-        204:
+        "204":
           description: ""
+        "400":
+          description: ""
+          content:
+            text/plain:
+              schema:
+                type: string
+        "404":
+          description: ""
+          content:
+            text/plain:
+              schema:
+                type: string
       tags:
         - sources
 

@@ -788,6 +788,16 @@ func (response ListAllAllowlists200JSONResponse) VisitListAllAllowlistsResponse(
 	return json.NewEncoder(w).Encode(response)
 }
 
+type ListAllAllowlists400TextResponse string
+
+func (response ListAllAllowlists400TextResponse) VisitListAllAllowlistsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(400)
+
+	_, err := w.Write([]byte(response))
+	return err
+}
+
 type CreateAllowlistRequestObject struct {
 	Body *CreateAllowlistJSONRequestBody
 }
@@ -803,6 +813,16 @@ func (response CreateAllowlist201JSONResponse) VisitCreateAllowlistResponse(w ht
 	w.WriteHeader(201)
 
 	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAllowlist400TextResponse string
+
+func (response CreateAllowlist400TextResponse) VisitCreateAllowlistResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(400)
+
+	_, err := w.Write([]byte(response))
+	return err
 }
 
 type DeleteAllowListRequestObject struct {
@@ -821,6 +841,26 @@ func (response DeleteAllowList204Response) VisitDeleteAllowListResponse(w http.R
 	return nil
 }
 
+type DeleteAllowList400TextResponse string
+
+func (response DeleteAllowList400TextResponse) VisitDeleteAllowListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(400)
+
+	_, err := w.Write([]byte(response))
+	return err
+}
+
+type DeleteAllowList404TextResponse string
+
+func (response DeleteAllowList404TextResponse) VisitDeleteAllowListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(404)
+
+	_, err := w.Write([]byte(response))
+	return err
+}
+
 type ListAllowlistEntriesRequestObject struct {
 	Id int `json:"id"`
 }
@@ -836,6 +876,26 @@ func (response ListAllowlistEntries200JSONResponse) VisitListAllowlistEntriesRes
 	w.WriteHeader(200)
 
 	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAllowlistEntries400TextResponse string
+
+func (response ListAllowlistEntries400TextResponse) VisitListAllowlistEntriesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(400)
+
+	_, err := w.Write([]byte(response))
+	return err
+}
+
+type ListAllowlistEntries404TextResponse string
+
+func (response ListAllowlistEntries404TextResponse) VisitListAllowlistEntriesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(404)
+
+	_, err := w.Write([]byte(response))
+	return err
 }
 
 type AddToAllowlistRequestObject struct {
@@ -856,6 +916,26 @@ func (response AddToAllowlist201JSONResponse) VisitAddToAllowlistResponse(w http
 	return json.NewEncoder(w).Encode(response)
 }
 
+type AddToAllowlist400TextResponse string
+
+func (response AddToAllowlist400TextResponse) VisitAddToAllowlistResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(400)
+
+	_, err := w.Write([]byte(response))
+	return err
+}
+
+type AddToAllowlist404TextResponse string
+
+func (response AddToAllowlist404TextResponse) VisitAddToAllowlistResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(404)
+
+	_, err := w.Write([]byte(response))
+	return err
+}
+
 type RemoveFromAllowlistRequestObject struct {
 	Id      int `json:"id"`
 	EntryId int `json:"entryId"`
@@ -871,6 +951,26 @@ type RemoveFromAllowlist204Response struct {
 func (response RemoveFromAllowlist204Response) VisitRemoveFromAllowlistResponse(w http.ResponseWriter) error {
 	w.WriteHeader(204)
 	return nil
+}
+
+type RemoveFromAllowlist400TextResponse string
+
+func (response RemoveFromAllowlist400TextResponse) VisitRemoveFromAllowlistResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(400)
+
+	_, err := w.Write([]byte(response))
+	return err
+}
+
+type RemoveFromAllowlist404TextResponse string
+
+func (response RemoveFromAllowlist404TextResponse) VisitRemoveFromAllowlistResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(404)
+
+	_, err := w.Write([]byte(response))
+	return err
 }
 
 type ListAggregatedNodesRequestObject struct {
@@ -890,6 +990,16 @@ func (response ListAggregatedNodes200JSONResponse) VisitListAggregatedNodesRespo
 	return json.NewEncoder(w).Encode(response)
 }
 
+type ListAggregatedNodes400TextResponse string
+
+func (response ListAggregatedNodes400TextResponse) VisitListAggregatedNodesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(400)
+
+	_, err := w.Write([]byte(response))
+	return err
+}
+
 type ListSourcesRequestObject struct {
 	Params ListSourcesParams
 }
@@ -907,6 +1017,16 @@ func (response ListSources200JSONResponse) VisitListSourcesResponse(w http.Respo
 	return json.NewEncoder(w).Encode(response)
 }
 
+type ListSources400TextResponse string
+
+func (response ListSources400TextResponse) VisitListSourcesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(400)
+
+	_, err := w.Write([]byte(response))
+	return err
+}
+
 type CreateSourceRequestObject struct {
 	Body *CreateSourceJSONRequestBody
 }
@@ -922,6 +1042,16 @@ func (response CreateSource201JSONResponse) VisitCreateSourceResponse(w http.Res
 	w.WriteHeader(201)
 
 	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateSource400TextResponse string
+
+func (response CreateSource400TextResponse) VisitCreateSourceResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(400)
+
+	_, err := w.Write([]byte(response))
+	return err
 }
 
 type ListSourceNodesRequestObject struct {
@@ -942,6 +1072,26 @@ func (response ListSourceNodes200JSONResponse) VisitListSourceNodesResponse(w ht
 	return json.NewEncoder(w).Encode(response)
 }
 
+type ListSourceNodes400TextResponse string
+
+func (response ListSourceNodes400TextResponse) VisitListSourceNodesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(400)
+
+	_, err := w.Write([]byte(response))
+	return err
+}
+
+type ListSourceNodes404TextResponse string
+
+func (response ListSourceNodes404TextResponse) VisitListSourceNodesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(404)
+
+	_, err := w.Write([]byte(response))
+	return err
+}
+
 type StartSourceRequestObject struct {
 	Id int `json:"id"`
 }
@@ -958,6 +1108,26 @@ func (response StartSource204Response) VisitStartSourceResponse(w http.ResponseW
 	return nil
 }
 
+type StartSource400TextResponse string
+
+func (response StartSource400TextResponse) VisitStartSourceResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(400)
+
+	_, err := w.Write([]byte(response))
+	return err
+}
+
+type StartSource404TextResponse string
+
+func (response StartSource404TextResponse) VisitStartSourceResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(404)
+
+	_, err := w.Write([]byte(response))
+	return err
+}
+
 type StopSourceRequestObject struct {
 	Id int `json:"id"`
 }
@@ -972,6 +1142,26 @@ type StopSource204Response struct {
 func (response StopSource204Response) VisitStopSourceResponse(w http.ResponseWriter) error {
 	w.WriteHeader(204)
 	return nil
+}
+
+type StopSource400TextResponse string
+
+func (response StopSource400TextResponse) VisitStopSourceResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(400)
+
+	_, err := w.Write([]byte(response))
+	return err
+}
+
+type StopSource404TextResponse string
+
+func (response StopSource404TextResponse) VisitStopSourceResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(404)
+
+	_, err := w.Write([]byte(response))
+	return err
 }
 
 // StrictServerInterface represents all server handlers.
@@ -1377,24 +1567,24 @@ func (sh *strictHandler) StopSource(w http.ResponseWriter, r *http.Request, id i
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/+RYTY/bNhP+Kwu+71FZOXVPurlfwKJpG9Q5FAgWC0Yc20wpkiFH2xqG/ntB6tuibMnr",
-	"3W6Rk2WJM5xn5nmGIx1IqjKtJEi0JDkQm+4go/5yxdhKCPWX4BZ/lGj2d1Ln6J5QxjhyJal4b5QGgxws",
-	"STZUWIiI7tw6kJQz435xr4EkxKLhckuKIiIGvuTcACPJx3LVfVSvUp8+Q4qkiEg/gJl7c9bZmUuELRjn",
-	"VNIMzsfEGamWng/sDiGbGRytHTyMhTmSumgEVyh87yLq7xVC870BitBguqTQ05I6ms8ygrXKTQoXk20k",
-	"hohoMFyx4KPciIlhl2sbZyEUvyoGFzFVP1A2Um3rc1IuQ8j8xf8NbEhC/he34o0r5cYuhk4enYvKJzWG",
-	"7odEqfZudxpD1vU6D5+gFh/gb0hzZ3AC5qgYHsHYvukY8VtHrVV0HEEI4nu65ZIisEDTEeK3DUk+ns58",
-	"4+AXQMooUlJEs9LkbabW+SjKc2X2voew77vAm7hn9vjcWBUm747ah0yZrio/KSWASh+wQiomlLTaoDbo",
-	"uD1Zx74aX2EJ2wCvUb1jeb5CwHP60gnIlzeisfYyoUFdcriYXEp3GWR/+OSZ0+raEeXobBoA6rbCOqhh",
-	"bl0bhjQ3HPdrV7FqUtH8Z/CJ5pIkZAeUgak3Tsgfb1aav3Er2oKWFoVzyOVGeSgchXvmSrQDvFlXG918",
-	"oH/CTmVws9K8E2dCFrdvbxcuIUqDpJqThCxvF7cLB5PizscWN6ON+7cF/+MKTh3sO0YS8o5bXAnRtEvr",
-	"7Q3NAMFYLxCP60sOZt/Cohv0KEvqBkeEsKHgGceQYVvFe1dGq5W0ZYa/WSx8H1USQZZDj9aCpx5E/NmW",
-	"ZGgdThL08fngisHApobrkuPEFxzp1iWhnRGJU5hWNpDKozGRlGwEi98ptr8aguAwWvS5jyaHYpDFt1eL",
-	"4QnJK6IOK+MDZ4VvkyAAYZjSH/x9v927OqU9TN+W1lPrFiC2E0tLT98z+ok8zdUhnhjqzntKcG3+XO99",
-	"IuMvmIj8O9nwkJmlgutnc0xaK8Y+qOdW1sgb/b+qrbJMT9JXycf44H/uTuvtd8jUI/xkVNZP9qvSXBT0",
-	"UsG7QL5SsRLauF63WwPbemieekQ2LZqRSXiO7Ll8BBM8Kpspacz0P386d0b/M9x3xato3/kUMFrJdbXm",
-	"6xhyei8UZxLZfN44M9+UPp91uBl853rhFnxZ2joUbOaaMzyc002+Hkn3mPg8E1u3TrFFajzKFxxo1m7P",
-	"jpRmHbDjnIstKv3iUJS+AhL/dm0e64j96z/ZIeokjoVKqdgpi8lyuVwSF0vlof6qXZ4DTgPHp2/3Zr1d",
-	"cV/8EwAA//8yQJps2hkAAA==",
+	"H4sIAAAAAAAC/+xZW2/bNhT+KwG3RzVy5zzpzbsBwbqtmPswoAgCVjy22VEkSx5lNQz994HU/WbLXuy5",
+	"WZ+sSDzX75yPh8yOxCrRSoJES6IdsfEGEuofF4wthFB/C27xJ4lmey91iu4LZYwjV5KKt0ZpMMjBkmhF",
+	"hYWA6MarHYk5M+4XtxpIRCwaLtckywJi4FPKDTASvc9XPQTlKvXhI8RIsoC0HTjSNmcNy1wirME4pZIm",
+	"cNgnzkix9LBj9wjJkc7RUsHjmJsjqQtG4hpy36sI2raGovnBAEWoYjoF6GlJHc1n7sFSpSaGk4ttxIeA",
+	"aDBcscFPqRET3c7XVsqGovhNMTipUvUjZSNoW5+TfBlC4h++NbAiEfkmrJs3LDo3dD408uhUFDqpMXTb",
+	"L5TCdm1pLLKm1uPiE9TiI3yGOHUCe8IcbYYnMLYtOlb4taJaKuh6MBTiW7rmkiKwAdIR4vcVid7vz3yl",
+	"4FdAyihSkgVHpcnLTMW54+UhmL3uftgPzcArv4/k+NRYNVy8G2ofE2WaXflBKQFUeocVUjEB0sJAKdBQ",
+	"uxfHdjdeIYS1g8+BXrc9rzDgY3hpT8inE9EYvUwgqFM2F5NK6R4Hq3945zmG6uoRpbM39QJqUmHpVD+3",
+	"joYhTg3H7dIhVkwqmv8CPtFckohsgDIwpeGI/Plqofkrt6IGNJfInEIuV8qHwlG4bw6iDeDNsjB0847+",
+	"BRuVwM1C84afEZndvr6duYQoDZJqTiIyv53dzlyYFDfet7Aabdxfa/A/DnDqwr5nJCJvuMWFEBVdWi9v",
+	"aAIIxvoG8XF9SsFs67DoCn2UeekOjgjDgoInHIcEaxQfHIxWK2nzDH83m3keVRJB5kOP1oLHPojwo82L",
+	"oVY4qaG7+4MDg4GNDdd5jROX27ueaYTPGGpBecdoN/wBda6l6drltB45iWtYrewAMp2pk+TFDRa/V2z7",
+	"bAkZnG2zdiuhSSHrgfL62Xy4HiyyoNEz4Y6zzJM4CEDoI/Sjf++9f1Mi1ErRXS591kicurtLFOkAKTii",
+	"qVvb8227avb3eT/bIZS71j6yqovF7Vv/ki1OmCb9eba/QZ+/ar9grMdYbsHYO3Vukhu5q/lPaS4vohdT",
+	"NGO9HO78z/1+Jv0DEvUEPxuVtEvhK5tO7rBgUEuR/BOIWSqWJ36ciddrA+vyKDl1cKwmDUYmxdOR5/IJ",
+	"zOAAWZ0dxkS/+Jm1cSC+7IjkaqHo8cZ922hhLIs1/4+TROvUfllcqivJA4eI3MWzniB6d9MX3lyvAoVG",
+	"g1SHhwNdcgx1fuWv69jKW213nmNRs4pCi9R49y84ly+dzQZvvKBJbLxfQ4tKXzzRSr/4PPurU/NU5tPf",
+	"7ZINoo7CUKiYio2yGM3n8zlxmSo0lP+yzOcPx27dIbL5sjSXPWT/BAAA//8Fh7cDtx8AAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

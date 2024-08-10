@@ -12,10 +12,14 @@ import (
 	"github.com/jhamill34/prophet-security-takehome/server/database/pkg/database"
 )
 
+var (
+	ErrAllowlistNotFound = errors.New("Allow list not found")
+)
+
 func (s *ServerRoutes) getAllowList(ctx context.Context, id int32) (api.AllowlistEntry, error) {
 	dbResult, err := s.queries.GetAllowList(ctx, id)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return api.AllowlistEntry{}, fmt.Errorf("Allow list not found")
+		return api.AllowlistEntry{}, ErrAllowlistNotFound
 	}
 
 	if err != nil {
@@ -33,13 +37,17 @@ func (s *ServerRoutes) getAllowList(ctx context.Context, id int32) (api.Allowlis
 // AddToAllowlist implements api.StrictServerInterface.
 func (s *ServerRoutes) AddToAllowlist(ctx context.Context, request api.AddToAllowlistRequestObject) (api.AddToAllowlistResponseObject, error) {
 	list, err := s.getAllowList(ctx, int32(request.Id))
+	if errors.Is(err, ErrAllowlistNotFound) {
+		return api.AddToAllowlist404TextResponse(err.Error()), nil
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
 	ipAddr, err := netip.ParsePrefix(request.Body.Cidr)
 	if err != nil {
-		return nil, err
+		return api.AddToAllowlist400TextResponse(err.Error()), nil
 	}
 
 	dbResult, err := s.queries.AddToAllowlist(ctx, database.AddToAllowlistParams{
@@ -76,15 +84,27 @@ func (s *ServerRoutes) CreateAllowlist(ctx context.Context, request api.CreateAl
 
 // DeleteAllowList implements api.StrictServerInterface.
 func (s *ServerRoutes) DeleteAllowList(ctx context.Context, request api.DeleteAllowListRequestObject) (api.DeleteAllowListResponseObject, error) {
-	panic("unimplemented")
+	list, err := s.getAllowList(ctx, int32(request.Id))
+	if errors.Is(err, ErrAllowlistNotFound) {
+		return api.DeleteAllowList404TextResponse(err.Error()), nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.queries.DeleteAllowList(ctx, int32(list.Id))
+	if err != nil {
+		return nil, err
+	}
+
+	return api.DeleteAllowList204Response{}, nil
 }
 
 // ListAllAllowlists implements api.StrictServerInterface.
 func (s *ServerRoutes) ListAllAllowlists(ctx context.Context, request api.ListAllAllowlistsRequestObject) (api.ListAllAllowlistsResponseObject, error) {
 	after, err := strconv.ParseInt(DefaultValue(request.Params.After, "-1"), 10, 32)
 	if err != nil {
-		// TODO: ....
-		return nil, err
+		return api.ListAllAllowlists400TextResponse(err.Error()), nil
 	}
 	limit := DefaultValue(request.Params.Limit, 10)
 
@@ -92,9 +112,7 @@ func (s *ServerRoutes) ListAllAllowlists(ctx context.Context, request api.ListAl
 		ID:    int32(after),
 		Limit: int32(limit),
 	})
-
 	if err != nil {
-		// TODO:
 		return nil, err
 	}
 
@@ -123,9 +141,13 @@ func (s *ServerRoutes) ListAllAllowlists(ctx context.Context, request api.ListAl
 // ListAllowlistEntries implements api.StrictServerInterface.
 func (s *ServerRoutes) ListAllowlistEntries(ctx context.Context, request api.ListAllowlistEntriesRequestObject) (api.ListAllowlistEntriesResponseObject, error) {
 	list, err := s.getAllowList(ctx, int32(request.Id))
+	if errors.Is(err, ErrAllowlistNotFound) {
+		return api.ListAllowlistEntries404TextResponse(err.Error()), nil
+	}
 	if err != nil {
 		return nil, err
 	}
+
 	dbResult, err := s.queries.ListEntriesForAllowList(ctx, int32(list.Id))
 	if err != nil {
 		return nil, err
@@ -147,6 +169,9 @@ func (s *ServerRoutes) ListAllowlistEntries(ctx context.Context, request api.Lis
 // RemoveFromAllowlist implements api.StrictServerInterface.
 func (s *ServerRoutes) RemoveFromAllowlist(ctx context.Context, request api.RemoveFromAllowlistRequestObject) (api.RemoveFromAllowlistResponseObject, error) {
 	list, err := s.getAllowList(ctx, int32(request.Id))
+	if errors.Is(err, ErrAllowlistNotFound) {
+		return api.RemoveFromAllowlist404TextResponse(err.Error()), nil
+	}
 	if err != nil {
 		return nil, err
 	}

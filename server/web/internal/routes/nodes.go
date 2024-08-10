@@ -17,7 +17,7 @@ func (s *ServerRoutes) ListAggregatedNodes(ctx context.Context, request api.List
 	limit := DefaultValue(request.Params.Limit, 10)
 	after, err := ParseIp(request.Params.After)
 	if err != nil {
-		return nil, err
+		return api.ListAggregatedNodes400TextResponse(err.Error()), nil
 	}
 
 	if request.Params.AllowlistId == nil {
@@ -25,9 +25,7 @@ func (s *ServerRoutes) ListAggregatedNodes(ctx context.Context, request api.List
 			IpAddr: after,
 			Limit:  int32(limit),
 		})
-
 		if err != nil {
-			// TODO: Come back here...
 			return nil, err
 		}
 
@@ -54,7 +52,6 @@ func (s *ServerRoutes) ListAggregatedNodes(ctx context.Context, request api.List
 				ListID: int32(*request.Params.AllowlistId),
 			})
 			if err != nil {
-				// TODO: ...
 				return nil, err
 			}
 
@@ -80,7 +77,6 @@ func (s *ServerRoutes) ListAggregatedNodes(ctx context.Context, request api.List
 				ListID: int32(*request.Params.AllowlistId),
 			})
 			if err != nil {
-				// TODO: ....
 				return nil, err
 			}
 
