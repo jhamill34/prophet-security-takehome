@@ -1,7 +1,11 @@
 # Prophet Security Take Home
 
 This project manages Tor exit-nodes from multiple sources. There's a control plane to manage 
-the sources that we need to monitor. 
+the sources that we need to monitor. If an endpoint is found in multiple sources it is not removed from the 
+aggregated list until it has been removed from all managed sources. For example, if source A and source B 
+both had 192.168.0.1 on their list, if source A no longer included it on its list but source B did then it 
+would be in our aggregated list still. As soon as source B no longer included it then it would be removed from
+our list. 
 
 You can fetch data from the service by asking for all aggregated nodes. 
 

@@ -13,29 +13,28 @@ paths:
   /nodes:
     get: 
       operationId: listAggregatedNodes
-      summary: ""
-      description: ""
+      description: "List all nodes that have been aggregated from all sources"
       parameters: 
         - name: allowlistId
-          description: ""
+          description: "Filter to only show nodes that are in this allowlist"
           in: query
           required: false
           schema: 
             type: integer
         - name: invert
-          description: ""
+          description: "Fitler to remove nodes found in the allowlist"
           in: query
           required: false
           schema: 
             type: boolean
         - name: after
-          description: ""
+          description: "Cursor to continue pagination from, found in the prevous request"
           in: query
           required: false
           schema:
             type: string
         - name: limit
-          description: ""
+          description: "Number of results to show"
           in: query
           required: false
           schema:
@@ -43,13 +42,11 @@ paths:
 
       responses:
         "200":
-          description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginatedNodeEntry'
         "400":
-          description: ""
           content:
             text/plain:
               schema:
@@ -61,30 +58,27 @@ paths:
   /allowlist:
     get:
       operationId: listAllAllowlists
-      summary: ""
-      description: ""
+      description: "Lists all the allow lists that have been created"
       parameters: 
         - name: after
-          description: ""
+          description: "Cursor to continue pagination from, found in the prevous request"
           in: query
           required: false
           schema:
             type: string
         - name: limit
-          description: ""
+          description: "Number of results to show"
           in: query
           required: false
           schema:
             type: integer
       responses: 
         "200":
-          description: ""
           content: 
             application/json:
               schema: 
                 $ref: '#/components/schemas/PaginatedAllowlistEntry'
         "400":
-          description: ""
           content:
             text/plain:
               schema:
@@ -95,10 +89,8 @@ paths:
         - allowlist
     post:
       operationId: createAllowlist
-      summary: ""
-      description: ""
+      description: "Creates a new allow list"
       requestBody:
-        description: ""
         required: true
         content: 
           application/json:
@@ -106,13 +98,11 @@ paths:
               $ref: '#/components/schemas/CreateAllowlistInput'
       responses:
         "201":
-          description: ""
           content: 
             application/json:
               schema: 
                 $ref: '#/components/schemas/AllowlistEntry'
         "400":
-          description: ""
           content:
             text/plain:
               schema:
@@ -123,26 +113,23 @@ paths:
   /allowlist/{id}:
     parameters:
       - name: id
-        description: ""
+        description: "The id of the requested allowlist resource"
         in: path
         required: true
         schema:
           type: integer
     delete:
       operationId: deleteAllowList
-      summary: ""
-      description: ""
+      description: "Deletes the requested allowlist resource"
       responses:
         "204":
           description: ""
         "400":
-          description: ""
           content:
             text/plain:
               schema:
                 type: string
         "404":
-          description: ""
           content:
             text/plain:
               schema:
@@ -153,18 +140,16 @@ paths:
   /allowlist/{id}/entry:
     parameters:
       - name: id
-        description: ""
+        description: "The id of the requested allowlist resource"
         in: path
         required: true
         schema:
           type: integer
     get: 
       operationId: listAllowlistEntries
-      summary: ""
-      description: ""
+      description: "Lists all the entries that have been added to the allowlist resource"
       responses:
         "200":
-          description: ""
           content:
             application/json:
               schema:
@@ -172,13 +157,11 @@ paths:
                 items:
                   $ref: '#/components/schemas/AllowlistEntryItem'
         "400":
-          description: ""
           content:
             text/plain:
               schema:
                 type: string
         "404":
-          description: ""
           content:
             text/plain:
               schema:
@@ -188,10 +171,8 @@ paths:
 
     post:
       operationId: addToAllowlist
-      summary: ""
-      description: ""
+      description: "Adds an entry into the allowlist"
       requestBody:
-        description: ""
         required: true
         content:
           application/json:
@@ -199,19 +180,16 @@ paths:
               $ref: '#/components/schemas/AddAllowlistEntryInput'
       responses:
         "201":
-          description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AllowlistEntryItem'
         "400":
-          description: ""
           content:
             text/plain:
               schema:
                 type: string
         "404":
-          description: ""
           content:
             text/plain:
               schema:
@@ -222,32 +200,29 @@ paths:
   /allowlist/{id}/entry/{entryId}:
     parameters:
       - name: id
-        description: ""
+        description: "The id of the requested allowlist resource"
         in: path
         required: true
         schema:
           type: integer
       - name: entryId
-        description: ""
+        description: "The id of the requested entry in the allowlist resource"
         in: path
         required: true
         schema:
           type: integer
     delete:
       operationId: removeFromAllowlist
-      summary: ""
-      description: ""
+      description: "Removes the entry from the allowlist"
       responses:
         "204":
           description: ""
         "400":
-          description: ""
           content:
             text/plain:
               schema:
                 type: string
         "404":
-          description: ""
           content:
             text/plain:
               schema:
@@ -258,30 +233,27 @@ paths:
   /sources:
     get:
       operationId: listSources
-      summary: ""
-      description: ""
+      description: "Lists all sources the service is aggregated nodes from"
       parameters:
         - name: after
-          description: ""
+          description: "Cursor to continue pagination from, found in the prevous request"
           in: query
           required: false
           schema:
             type: string
         - name: limit
-          description: ""
+          description: "Number of results to show"
           in: query
           required: false
           schema:
             type: integer
       responses:
         "200":
-          description: ""
           content: 
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginatedSourceEntry'
         "400":
-          description: ""
           content:
             text/plain:
               schema:
@@ -292,10 +264,8 @@ paths:
 
     post:
       operationId: createSource
-      summary: ""
-      description: ""
+      description: "Creates a new source to fetch nodes from"
       requestBody:
-        description: ""
         required: true
         content:
           application/json:
@@ -303,13 +273,11 @@ paths:
               $ref: '#/components/schemas/CreateSourceEntryInput'
       responses:
         "201":
-          description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/SourceEntry'
         "400":
-          description: ""
           content:
             text/plain:
               schema:
@@ -320,43 +288,39 @@ paths:
   /sources/{id}:
     parameters:
       - name: id
-        description: ""
+        description: "The id of the requested source resource"
         in: path
         required: true
         schema: 
           type: integer
     get:
       operationId: listSourceNodes
-      summary: ""
-      description: ""
+      description: "Lists all the nodes that have been fetched from the requested source resource"
       parameters:
         - name: after
-          description: ""
+          description: "Cursor to continue pagination from, found in the prevous request"
           in: query
           required: false
           schema:
             type: string
         - name: limit
-          description: ""
+          description: "Number of results to show"
           in: query
           required: false
           schema:
             type: integer
       responses:
         "200":
-          description: ""
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginatedNodeEntry'
         "400":
-          description: ""
           content:
             text/plain:
               schema:
                 type: string
         "404":
-          description: ""
           content:
             text/plain:
               schema:
@@ -367,26 +331,23 @@ paths:
   /sources/{id}/stop:
     parameters:
       - name: id
-        description: ""
+        description: "The id of the requested source resource"
         in: path
         required: true
         schema: 
           type: integer
     post: 
       operationId: stopSource
-      summary: ""
-      description: ""
+      description: "Stops the source from syncing anymore and removes all the nodes from the aggregated list"
       responses:
         "204":
           description: ""
         "400":
-          description: ""
           content:
             text/plain:
               schema:
                 type: string
         "404":
-          description: ""
           content:
             text/plain:
               schema:
@@ -397,7 +358,7 @@ paths:
   /sources/{id}/start:
     parameters:
       - name: id
-        description: ""
+        description: "The id of the requested source resource"
         in: path
         required: true
         schema: 
@@ -405,19 +366,16 @@ paths:
 
     post: 
       operationId: startSource 
-      summary: ""
-      description: ""
+      description: "Restarts the source and queues it up for syncing based on its previous execution time"
       responses:
         "204":
           description: ""
         "400":
-          description: ""
           content:
             text/plain:
               schema:
                 type: string
         "404":
-          description: ""
           content:
             text/plain:
               schema:

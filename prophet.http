@@ -45,6 +45,14 @@ Content-Type: application/json
     "cidr": "2.58.0.0/16"
 }
 
+# Add an IP to an allowlist
+POST http://localhost:3333/allowlist/1/entry
+Content-Type: application/json
+
+{
+    "cidr": "192.168.0.0/16"
+}
+
 # Remove an IP from an allowlist
 DELETE http://localhost:3333/allowlist/1/entry/1
 
@@ -86,10 +94,10 @@ Content-Type: application/json
     "period": "00:00:30"
 }
 
-# Stop a Source
+# Stop a Source and removes all its nodes from the system
 POST http://localhost:3333/sources/1/stop
 
-# Start a Source 
+# Queues up the source to start syncing again
 POST http://localhost:3333/sources/1/start
 
 
