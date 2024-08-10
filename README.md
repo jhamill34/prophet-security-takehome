@@ -78,7 +78,6 @@ sources you can make changes to the CSV files found in that directory and the in
 go run ./server/mock/cmd/server
 ```
 
-
 ## Other tools
 
 I used a few code generators to create some of the go code found in this repository. 
@@ -86,3 +85,9 @@ I used a few code generators to create some of the go code found in this reposit
 - [sqlc](https://github.com/sqlc-dev/sqlc) to generate models from the migration schema and defined queries found in the [database module](./server/database)
 - [oapi-codegen](https://github.com/oapi-codegen/oapi-codegen) to generate models and handler stubs from the OpenAPI spec found in the [api module](./server/api)
 
+## Future Work
+
+Obviously, I went a bit out of scope of the initial idea but there is still some things that I think would be fun to include into this project.
+
+- The first would be converting the OpenAPI spec into a documentation website. 
+- Adding a front end using React and TypeScript. Theres some interesting tools that can convert OpenAPI spect into [react-query hooks](https://github.com/7nohe/openapi-react-query-codegen) that would be neat to look into. 
